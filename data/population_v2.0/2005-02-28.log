@@ -1,0 +1,70 @@
+--------------------------------------------------
+datetime,message,random_int_1,random_int_2
+--------------------------------------------------
+2005-02-27T23:58:06, Misc. noise event 0,37,5
+2005-02-28T00:00, Critical path event 1,2,1
+2005-02-28T00:06:39, Misc. noise event 1,63,1
+2005-02-28T00:07:37, Critical path event 2,18,4
+2005-02-28T00:16:49, Critical path event 3,4,3
+2005-02-28T00:24:30, Critical path event 4,42,0
+2005-02-28T00:33:17, Misc. noise event 2,62,0
+2005-02-28T00:37:50, Critical path event 5,18,2
+2005-02-28T00:47:21, Critical path event 6,80,2
+2005-02-28T00:54:33, Critical path event 7,64,3
+2005-02-28T00:57:23, Misc. noise event 3,93,5
+2005-02-28T00:58:19, Critical path event 8,17,7
+2005-02-28T01:07:51, Critical path event 9,86,3
+2005-02-28T01:15:22, Critical path event 9,58,10
+2005-02-28T01:22:34, Misc. noise event 4,0,7
+2005-02-28T01:26:51, Critical path event 9,82,1
+2005-02-28T01:33:20, Misc. noise event 5,68,10
+2005-02-28T01:34:55, Critical path event 9,47,5
+2005-02-28T01:41:34, Critical path event 13,5,4
+2005-02-28T01:49:56, Critical path event 14,24,3
+2005-02-28T01:54:31, Misc. noise event 6,66,2
+2005-02-28T01:57:33, Critical path event 15,20,10
+2005-02-28T02:04:06, Misc. noise event 7,21,7
+2005-02-28T02:06:45, Critical path event 16,54,8
+2005-02-28T02:14:26, Critical path event 17,47,8
+2005-02-28T02:27:46, Critical path event 18,38,5
+2005-02-28T02:37:17, Critical path event 19,50,2
+2005-02-28T02:44:29, Critical path event 19,63,0
+
+    ----------------some other thing --------------
+    filesize :1024k
+    alert-level : FATAL
+    description: thing with pid 34345 died because 
+        random java stacktrace 
+        that is super noisy with numbers and datetimes 
+Exception in thread "main" java.lang.NullPointerException
+    at AnotherClassLoader.loadClass(test.java:58)
+    at test.main(test.java:30)
+    at Main.main(Main.java:68)
+    -------------------------------------------- 
+    2005-02-28T02:48:15, Critical path event 19,12,1
+2005-02-28T02:57:47, Critical path event 19,88,0
+2005-02-28T03:05:18, Critical path event 23,94,4
+2005-02-28T03:16:47, Critical path event 24,89,10
+2005-02-28T03:24:51, Critical path event 25,99,6
+2005-02-28T03:31:30, Critical path event 26,57,7
+2005-02-28T03:39:52, Critical path event 27,3,1
+2005-02-28T03:47:29, Critical path event 28,60,2
+2005-02-28T03:56:41, Critical path event 29,34,5
+2005-02-28T04:04:06, Misc. noise event 8,5,2
+2005-02-28T04:04:22, Critical path event 29,57,4
+2005-02-28T04:17:42, Critical path event 29,14,4
+2005-02-28T04:27:13, Critical path event 29,63,6
+2005-02-28T04:34:25, Critical path event 33,30,4
+2005-02-28T04:38:11, Critical path event 34,50,7
+2005-02-28T04:47:43, Critical path event 35,42,3
+2005-02-28T04:55:14, Critical path event 36,26,5
+2005-02-28T05:06:43, Critical path event 37,44,0
+2005-02-28T05:12:20, Misc. noise event 9,15,6
+2005-02-28T05:14:47, Critical path event 38,42,6
+2005-02-28T05:21:26, Critical path event 39,71,4
+2005-02-28T05:29:48, Critical path event 19,49,6
+2005-02-28T05:36:18, Misc. noise event 10,34,1
+2005-02-28T05:37:25, Critical path event 19,97,7
+2005-02-28T05:46:37, Critical path event 19,19,7
+2005-02-28T05:54:18, Critical path event 19,98,4
+2005-02-28T06:07:38, Critical path event 44,31,7
