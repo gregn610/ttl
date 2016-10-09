@@ -1,0 +1,1 @@
+CONST_EMPTY = -1.0
