@@ -183,20 +183,20 @@ class TTCModelData(object):
         with pd.HDFStore(filename, mode='r+') as store:
             for idx, bs in enumerate(batchSamples):
                 # Groups
-                store['dataframes/training_samples/%d/dfX' % idx] = bs.dfX
-                store['dataframes/training_samples/%d/dfy' % idx] = bs.dfy
+                store['dataframes/training_samples/bs%05d/dfX' % idx] = bs.dfX
+                store['dataframes/training_samples/bs%05d/dfy' % idx] = bs.dfy
 
         with h5py.File(filename, 'r+') as h5f:  # mode='r+' append
             for idx, bs in enumerate(batchSamples):
                 # Dummy group to hold BatchSample attributes
-                h5f.create_dataset('members/%s/%d' % (samples_path, idx), (0,), dtype='i')
+                h5f.create_dataset('members/%s/bs%05d' % (samples_path, idx), (0,), dtype='i')
                 #Attribs
-                h5f['members/%s/%d' % (samples_path, idx)].attrs[ "CONST_COLNAME_PREFIX"]     = bs.CONST_COLNAME_PREFIX
-                h5f['members/%s/%d' % (samples_path, idx)].attrs[ "event_time_col"]           = bs.event_time_col
-                h5f['members/%s/%d' % (samples_path, idx)].attrs[ "event_label_col"]          = bs.event_label_col
-                h5f['members/%s/%d' % (samples_path, idx)].attrs[ "_feature_padding_columns"] = bs._feature_padding_columns
-                h5f['members/%s/%d' % (samples_path, idx)].attrs[ "filepath_or_buffer"]       = bs.filepath_or_buffer
-                h5f['members/%s/%d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = bs.source_was_buffer
+                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "CONST_COLNAME_PREFIX"]     = bs.CONST_COLNAME_PREFIX
+                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "event_time_col"]           = bs.event_time_col
+                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "event_label_col"]          = bs.event_label_col
+                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "_feature_padding_columns"] = bs._feature_padding_columns
+                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "filepath_or_buffer"]       = bs.filepath_or_buffer
+                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = bs.source_was_buffer
 
     def save_np_data_file(self, filename):
         with h5py.File(filename, 'w') as h5f:  # mode='w' overwrite
@@ -227,17 +227,17 @@ class TTCModelData(object):
 
             for idx, val in enumerate([ _ for _ in store.keys() if re.match( '^/dataframes/%s/\d+/dfX' % samples_path, _)]):
                 # Groups
-                batchSamples[idx].dfX = store[ 'dataframes/%s/%d/dfX' % (samples_path, idx) ]
-                batchSamples[idx].dfy = store[ 'dataframes/%s/%d/dfy' % (samples_path, idx) ]
+                batchSamples[idx].dfX = store[ 'dataframes/%s/bs%05d/dfX' % (samples_path, idx) ]
+                batchSamples[idx].dfy = store[ 'dataframes/%s/bs%05d/dfy' % (samples_path, idx) ]
 
             for idx, val in enumerate([ _ for _ in store.keys() if re.match('members/%s' % samples_path, _ )]):
                 # Attributes
-                batchSamples[idx].CONST_COLNAME_PREFIX     = store['members/%s/%d' % (samples_path, idx)].attrs["CONST_COLNAME_PREFIX"]
-                batchSamples[idx].event_time_col           = store['members/%s/%d' % (samples_path, idx)].attrs["event_time_col"]
-                batchSamples[idx].event_label_col          = store['members/%s/%d' % (samples_path, idx)].attrs["event_label_col"]
-                batchSamples[idx]._feature_padding_columns = store['members/%s/%d' % (samples_path, idx)].attrs["_feature_padding_columns"]
-                batchSamples[idx].filepath_or_buffer       = store['members/%s/%d' % (samples_path, idx)].attrs["filepath_or_buffer"]
-                batchSamples[idx].source_was_buffer        = store['members/%s/%d' % (samples_path, idx)].attrs["source_was_buffer"]
+                batchSamples[idx].CONST_COLNAME_PREFIX     = store['members/%s/bs%05d' % (samples_path, idx)].attrs["CONST_COLNAME_PREFIX"]
+                batchSamples[idx].event_time_col           = store['members/%s/bs%05d' % (samples_path, idx)].attrs["event_time_col"]
+                batchSamples[idx].event_label_col          = store['members/%s/bs%05d' % (samples_path, idx)].attrs["event_label_col"]
+                batchSamples[idx]._feature_padding_columns = store['members/%s/bs%05d' % (samples_path, idx)].attrs["_feature_padding_columns"]
+                batchSamples[idx].filepath_or_buffer       = store['members/%s/bs%05d' % (samples_path, idx)].attrs["filepath_or_buffer"]
+                batchSamples[idx].source_was_buffer        = store['members/%s/bs%05d' % (samples_path, idx)].attrs["source_was_buffer"]
 
 
     def load_np_data_file(self, filename):
