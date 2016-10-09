@@ -141,9 +141,15 @@ class TestTTCModelData(unittest.TestCase):
         self.modelData.testing_files = self.modelData.split_population(self.SAMPLE_FILES)
 
         X_pd_kwargs = {}
-        self.modelData.training_samples   = self.modelData._preprocess_sample_files(self.modelData.training_files, **X_pd_kwargs)
-        self.modelData.validation_samples = self.modelData._preprocess_sample_files(self.modelData.validation_files, **X_pd_kwargs)
-        self.modelData.testing_samples    = self.modelData._preprocess_sample_files(self.modelData.testing_files, **X_pd_kwargs)
+        self.modelData.training_samples   = self.modelData._preprocess_sample_files(
+            self.modelData.training_files, "training samples",     **X_pd_kwargs
+        )
+        self.modelData.validation_samples = self.modelData._preprocess_sample_files(
+            self.modelData.validation_files, "validation samples", **X_pd_kwargs
+        )
+        self.modelData.testing_samples    = self.modelData._preprocess_sample_files(
+            self.modelData.testing_files, "testing samples",       **X_pd_kwargs
+        )
 
         self.assertEqual(len(self.modelData.training_files), len(self.modelData.training_samples))
         self.assertEqual(len(self.modelData.validation_files), len(self.modelData.validation_samples))
@@ -174,7 +180,7 @@ class TestTTCModelData(unittest.TestCase):
 
         X_pd_kwargs = {}
         # validation_samples is big enough population for unit tests
-        self.modelData.validation_samples = self.modelData._preprocess_sample_files(self.modelData.validation_files, **X_pd_kwargs)
+        self.modelData.validation_samples = self.modelData._preprocess_sample_files(self.modelData.validation_files, "validation samples", **X_pd_kwargs)
 
         self.modelData._uniform_features()
         self.modelData._fit_x_scaler()

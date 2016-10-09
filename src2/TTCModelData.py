@@ -7,6 +7,8 @@ import pandas as pd
 from sklearn import preprocessing
 import math
 
+from tqdm import tqdm
+
 from BatchSample import BatchSample
 from Consts import CONST_EMPTY
 
@@ -43,9 +45,9 @@ class TTCModelData(object):
         self.validation_files, \
         self.testing_files = self.split_population(filelist)
 
-        self.training_samples   = self._preprocess_sample_files(self.training_files,   **X_pd_kwargs)
-        self.validation_samples = self._preprocess_sample_files(self.validation_files, **X_pd_kwargs)
-        self.testing_samples    = self._preprocess_sample_files(self.testing_files,    **X_pd_kwargs)
+        self.training_samples   = self._preprocess_sample_files(self.training_files,   "training samples",   **X_pd_kwargs)
+        self.validation_samples = self._preprocess_sample_files(self.validation_files, "validation samples", **X_pd_kwargs)
+        self.testing_samples    = self._preprocess_sample_files(self.testing_files,    "testing samples",    **X_pd_kwargs)
 
         self._uniform_features()
         self._fit_x_scaler()
@@ -71,14 +73,14 @@ class TTCModelData(object):
             [filelist[idx] for idx in testing_indices],
         )
 
-    def _preprocess_sample_files(self, filelist, **X_pd_kwargs):
+    def _preprocess_sample_files(self, filelist, descr=None, **X_pd_kwargs):
         """
         Turn a list of files into a list of BatchSamples
         :type filelist: List<BatchSample>
         """
 
         bsList = [BatchSample() for _ in filelist]
-        for idx, fname in enumerate(filelist):
+        for idx, fname in enumerate(tqdm(filelist, desc=descr)):
             bsList[idx].process_file(fname, 0, 1, **X_pd_kwargs)
 
         return bsList
@@ -111,18 +113,18 @@ class TTCModelData(object):
         """
         Set up the numpy X_train, y_train, X_validation etc ..
         """
-        self.X_train, self.y_train           = self.convert_to_numpy(self.training_samples)
-        self.X_validation, self.y_validation = self.convert_to_numpy(self.validation_samples)
-        self.X_test, self.y_test             = self.convert_to_numpy(self.testing_samples)
+        self.X_train, self.y_train           = self.convert_to_numpy(self.training_samples,   "training samples")
+        self.X_validation, self.y_validation = self.convert_to_numpy(self.validation_samples, "validation samples")
+        self.X_test, self.y_test             = self.convert_to_numpy(self.testing_samples,    "testing samples")
 
 
-    def convert_to_numpy(self, batchSamples):
+    def convert_to_numpy(self, batchSamples, descr=None):
         """
         BatchSample deals in pandas.DataFrames
         TTCModelData deali in numpy.adarrays
         """
-        X_pop = np.concatenate([self.get_shaped_features_X(bs) for bs in batchSamples])
-        y_pop = np.concatenate([self.get_shaped_y(bs)          for bs in batchSamples])
+        X_pop = np.concatenate(tqdm([self.get_shaped_features_X(bs) for bs in batchSamples], desc=descr))
+        y_pop = np.concatenate(tqdm([self.get_shaped_y(bs)          for bs in batchSamples], desc=descr))
 
         assert type(X_pop) == np.ndarray
         assert type(y_pop) == np.ndarray
@@ -225,7 +227,7 @@ class TTCModelData(object):
             # Init
             batchSamples = [BatchSample() for _ in store.keys() if re.match('^/dataframes/training_samples/\d+/dfX', _)]
 
-            for idx, val in enumerate([ _ for _ in store.keys() if re.match( '^/dataframes/%s/\d+/dfX' % samples_path, _)]):
+            for idx, val in enumerate(tqdm([ _ for _ in store.keys() if re.match( '^/dataframes/%s/\d+/dfX' % samples_path, _)], desc=samples_path)):
                 # Groups
                 batchSamples[idx].dfX = store[ 'dataframes/%s/bs%05d/dfX' % (samples_path, idx) ]
                 batchSamples[idx].dfy = store[ 'dataframes/%s/bs%05d/dfy' % (samples_path, idx) ]
