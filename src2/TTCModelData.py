@@ -45,9 +45,9 @@ class TTCModelData(object):
         self.validation_files, \
         self.testing_files = self.split_population(filelist)
 
-        self.training_samples   = self._preprocess_sample_files(self.training_files,   "training samples",   **X_pd_kwargs)
-        self.validation_samples = self._preprocess_sample_files(self.validation_files, "validation samples", **X_pd_kwargs)
-        self.testing_samples    = self._preprocess_sample_files(self.testing_files,    "testing samples",    **X_pd_kwargs)
+        self.training_samples   = self._preprocess_sample_files(self.training_files,   "training files",   **X_pd_kwargs)
+        self.validation_samples = self._preprocess_sample_files(self.validation_files, "validation files", **X_pd_kwargs)
+        self.testing_samples    = self._preprocess_sample_files(self.testing_files,    "testing files",    **X_pd_kwargs)
 
         self._uniform_features()
         self._fit_x_scaler()
@@ -113,18 +113,19 @@ class TTCModelData(object):
         """
         Set up the numpy X_train, y_train, X_validation etc ..
         """
-        self.X_train, self.y_train           = self.convert_to_numpy(self.training_samples,   "training samples")
-        self.X_validation, self.y_validation = self.convert_to_numpy(self.validation_samples, "validation samples")
-        self.X_test, self.y_test             = self.convert_to_numpy(self.testing_samples,    "testing samples")
+        self.X_train, self.y_train           = self.convert_to_numpy(self.training_samples,   "training reshaped")
+        self.X_validation, self.y_validation = self.convert_to_numpy(self.validation_samples, "validation reshaped")
+        self.X_test, self.y_test             = self.convert_to_numpy(self.testing_samples,    "testing reshaped")
 
 
     def convert_to_numpy(self, batchSamples, descr=None):
         """
         BatchSample deals in pandas.DataFrames
-        TTCModelData deali in numpy.adarrays
+        TTCModelData deals in numpy.nparrays
         """
-        X_pop = np.concatenate(tqdm([self.get_shaped_features_X(bs) for bs in batchSamples], desc=descr))
-        y_pop = np.concatenate(tqdm([self.get_shaped_y(bs)          for bs in batchSamples], desc=descr))
+
+        X_pop = np.concatenate([self.get_shaped_features_X(bs) for bs in batchSamples])
+        y_pop = np.concatenate([self.get_shaped_y(bs)          for bs in batchSamples])
 
         assert type(X_pop) == np.ndarray
         assert type(y_pop) == np.ndarray

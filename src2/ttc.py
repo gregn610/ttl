@@ -2,10 +2,10 @@
 """Time Till Complete.
 
 Usage:
-  ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] <modelData.h5> LOGFILES ...
-  ttc.py train [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] <modelFile.ttc> <modelData.h5>
-  ttc.py evaluate [--web [--web-port=<web-port>] [--json]] <modelFile.ttc> <modelData.h5>
-  ttc.py predict  [--web [--web-port=<web-port>] [--json]] [--watch [--interval=<seconds>]] <modelFile.ttc> LOGFILE
+  ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] [-q | --quiet] <modelData.h5> LOGFILES ...
+  ttc.py train [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] [-q | --quiet]<modelFile.ttc> <modelData.h5>
+  ttc.py evaluate [--web [--web-port=<web-port>] [--json]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
+  ttc.py predict  [--web [--web-port=<web-port>] [--json]] [--watch [--interval=<seconds>]] [-q | --quiet] <modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
   ttc.py --version
 
@@ -20,6 +20,7 @@ Options:
   --web                                   Results to an HTTP interface
   --web-port=<web-port>                   The port to use for the HTTP interface [default: 8080]
   --json                                  No HTML interface, just raw JSON
+  -q --quiet                              Suppress output
   -h --help     Show this screen.
   --version     Show version.
 
