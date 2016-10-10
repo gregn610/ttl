@@ -3,7 +3,7 @@
 
 Usage:
   ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] [-q | --quiet] <modelData.h5> LOGFILES ...
-  ttc.py train [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] [-q | --quiet]<modelFile.ttc> <modelData.h5>
+  ttc.py train [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
   ttc.py evaluate [--web [--web-port=<web-port>] [--json]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
   ttc.py predict  [--web [--web-port=<web-port>] [--json]] [--watch [--interval=<seconds>]] [-q | --quiet] <modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
@@ -76,8 +76,9 @@ if __name__ == '__main__':
                       epochs =1,
                       verbose=1
                       )
+        print('Saving trained model to: %s' % arguments['<modelFile.ttc>'])
         mlModel.save(arguments['<modelFile.ttc>'])
-        print('Trained model saved to: %s' % arguments['<modelData.h5>'])
+
 
     elif arguments['evaluate'] == True:
         print("Arguments:\n%s" %str(arguments))

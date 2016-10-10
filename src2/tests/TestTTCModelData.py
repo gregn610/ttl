@@ -182,7 +182,7 @@ class TestTTCModelData(unittest.TestCase):
         # validation_samples is big enough population for unit tests
         self.modelData.validation_samples = self.modelData._preprocess_sample_files(self.modelData.validation_files, "validation samples", **X_pd_kwargs)
 
-        self.modelData._uniform_features()
+        self.modelData._homogenize_features()
         self.modelData._fit_x_scaler()
 
         X_pop, y_pop = self.modelData.convert_to_numpy(self.modelData.validation_samples)

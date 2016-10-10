@@ -49,7 +49,7 @@ class TTCModelData(object):
         self.validation_samples = self._preprocess_sample_files(self.validation_files, "validation files", **X_pd_kwargs)
         self.testing_samples    = self._preprocess_sample_files(self.testing_files,    "testing files",    **X_pd_kwargs)
 
-        self._uniform_features()
+        self._homogenize_features()
         self._fit_x_scaler()
 
         self._load_numpy_data()
@@ -86,7 +86,7 @@ class TTCModelData(object):
         return bsList
 
 
-    def _uniform_features(self):
+    def _homogenize_features(self):
         # Gather whole population data (NB: with testing_samples)
         self.max_timesteps = 0
         for bs in (self.training_samples + self.validation_samples + self.testing_samples):
@@ -101,7 +101,7 @@ class TTCModelData(object):
 
     def _fit_x_scaler(self):
         """
-        Must be called after self._uniform_features()
+        Must be called after self._homogenize_features()
         """
         # copy=True. don't want to touch the cache's numpy array in bs
         self.Xscaler = preprocessing.MinMaxScaler((-0.99999999, 1),copy=True)
@@ -226,9 +226,9 @@ class TTCModelData(object):
         """
         with pd.HDFStore(filename) as store:
             # Init
-            batchSamples = [BatchSample() for _ in store.keys() if re.match('^/dataframes/training_samples/\d+/dfX', _)]
+            batchSamples = [BatchSample() for _ in store.keys() if re.match('^/dataframes/%s/bs\d+/dfX' %(samples_path), _)]
 
-            for idx, val in enumerate(tqdm([ _ for _ in store.keys() if re.match( '^/dataframes/%s/\d+/dfX' % samples_path, _)], desc=samples_path)):
+            for idx, val in enumerate(tqdm([ _ for _ in store.keys() if re.match( '^/dataframes/%s/bs\d+/dfX' % samples_path, _)], desc=samples_path)):
                 # Groups
                 batchSamples[idx].dfX = store[ 'dataframes/%s/bs%05d/dfX' % (samples_path, idx) ]
                 batchSamples[idx].dfy = store[ 'dataframes/%s/bs%05d/dfy' % (samples_path, idx) ]
@@ -259,7 +259,7 @@ class TTCModelData(object):
             self._load_batch_samples(filename, self.validation_samples, "validation_samples")
             self._load_batch_samples(filename, self.testing_samples,    "testing_samples")
 
-            self._uniform_features()
+        self._homogenize_features()
 
     def import_file(self, savefile):
         pass
