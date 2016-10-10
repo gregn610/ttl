@@ -255,9 +255,9 @@ class TTCModelData(object):
             self.X_test       = h5f['numpy/X_test'      ][:]
             self.y_test       = h5f['numpy/y_test'      ][:]
 
-            self._load_batch_samples(filename, self.training_samples,   "training_samples")
-            self._load_batch_samples(filename, self.validation_samples, "validation_samples")
-            self._load_batch_samples(filename, self.testing_samples,    "testing_samples")
+        self._load_batch_samples(filename, self.training_samples,   "training_samples")
+        self._load_batch_samples(filename, self.validation_samples, "validation_samples")
+        self._load_batch_samples(filename, self.testing_samples,    "testing_samples")
 
         self._homogenize_features()
 
