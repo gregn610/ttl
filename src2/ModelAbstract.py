@@ -17,10 +17,6 @@ from TTCModelData import TTCModelData
 class ModelAbstract(object):
 
     def __init__(self):
-        os.environ['KERAS_BACKEND'] = 'tensorflow'
-        os.environ['LD_LIBRARY_PATH'] = '/usr/local/cuda/lib64'
-        os.environ['CUDA_HOME'] = '/usr/local/cuda'
-
         self.model = None
         self.complete_features = None
         self.max_timesteps     = None
@@ -55,7 +51,7 @@ class ModelAbstract(object):
 
 
     def predict(self, model_file, sample_file, verbose=0, **X_pd_kwargs):
-        self._load_keras_model()
+        self._load_keras_model(model_file)
         X = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
 
         return self.model.predict(X, self.sample_handler.max_timesteps, verbose)

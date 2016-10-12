@@ -39,6 +39,10 @@ from docopt import docopt
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Time Till Complete 1.0')
 
+    os.environ['KERAS_BACKEND'] = 'tensorflow'
+    os.environ['LD_LIBRARY_PATH'] = '/usr/local/cuda/lib64'
+    os.environ['CUDA_HOME'] = '/usr/local/cuda'
+
     if arguments['preprocess'] == True:
         print('preprocessing log files into %s' % (arguments['<modelData.h5>']))
         from TTCModelData import TTCModelData
