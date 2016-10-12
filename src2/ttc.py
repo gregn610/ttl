@@ -3,7 +3,7 @@
 
 Usage:
   ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] [-q | --quiet] <modelData.h5> LOGFILES ...
-  ttc.py train [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
+  ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
   ttc.py evaluate [--web [--web-port=<web-port>] [--json]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
   ttc.py predict  [--web [--web-port=<web-port>] [--json]] [--watch [--interval=<seconds>]] [-q | --quiet] <modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
@@ -20,6 +20,7 @@ Options:
   --web                                   Results to an HTTP interface
   --web-port=<web-port>                   The port to use for the HTTP interface [default: 8080]
   --json                                  No HTML interface, just raw JSON
+  --reset                                 Overwrite any existing learning
   -q --quiet                              Suppress output
   -h --help     Show this screen.
   --version     Show version.
@@ -35,10 +36,9 @@ Commands:
 import os
 from docopt import docopt
 
-
-
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Time Till Complete 1.0')
+
     if arguments['preprocess'] == True:
         print('preprocessing log files into %s' % (arguments['<modelData.h5>']))
         from TTCModelData import TTCModelData
@@ -61,29 +61,45 @@ if __name__ == '__main__':
         modelData.load_np_data_file(arguments['<modelData.h5>'] )
 
         mlModel = ModelSimpleRNN()
-        mlModel.buildModel( batch_size      = modelData.X_train.shape[1],
-                            timesteps       = modelData.X_train.shape[1],
-                            input_dim       = modelData.X_train.shape[2],
-                            in_neurons      = 333,
-                            hidden_layers   = 1,
-                            hidden_neurons  = 333,
-                            out_neurons     = 333,
-                            rnn_activation  = 'tanh',
-                            dense_activation= 'linear'
-                            )
+        if os.path.isfile(arguments['<modelFile.ttc>']):
+                if arguments['--reset'] and not arguments['--quiet']:
+                    print('Overwriting %s' % arguments['<modelFile.ttc>'])
+                else:
+                    if not arguments['--quiet']:
+                        print('Reloading %s' % arguments['<modelFile.ttc>'])
+                    mlModel.load(arguments['<modelFile.ttc>'])
+
+
+        mlModel.buildModel(batch_size        = modelData.X_train.shape[1],
+                           timesteps         = modelData.X_train.shape[1],
+                           input_dim         = modelData.X_train.shape[2],
+                           in_neurons        = 333,
+                           hidden_layers     = 1,
+                           hidden_neurons    = 333,
+                           out_neurons       = 333,
+                           rnn_activation    = 'tanh',
+                           dense_activation  = 'linear'
+                           )
         mlModel.train(modelData.X_train, modelData.y_train,
                       modelData.X_validation, modelData.y_validation,
-                      epochs =1,
+                      epochs =7,
                       verbose=1
                       )
         print('Saving trained model to: %s' % arguments['<modelFile.ttc>'])
-        mlModel.save(arguments['<modelFile.ttc>'])
+        mlModel.save(modelData, arguments['<modelFile.ttc>'])
 
 
     elif arguments['evaluate'] == True:
         print("Arguments:\n%s" %str(arguments))
+
+
     elif arguments['predict'] == True:
-        print("Arguments:\n%s" % str(arguments))
+        from ModelSimpleRNN import ModelSimpleRNN
+
+        mlModel = ModelSimpleRNN()
+        prediction = mlModel.predict(arguments['<modelFile.ttc>'], arguments['LOGFILE'])
+        print(prediction)
+
     else:
         print("Arguments:\n%s" % str(arguments))
         #raise Exception # How did we get here?
