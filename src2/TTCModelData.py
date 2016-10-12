@@ -6,11 +6,12 @@ import re
 import pandas as pd
 from sklearn import preprocessing
 import math
-
 from tqdm import tqdm
 
+
+
 from BatchSample import BatchSample
-from Consts import CONST_EMPTY
+from Consts import CONST_EMPTY, CONST_XSCALER_MAX, CONST_XSCALER_MIN
 
 
 class TTCModelData(object):
@@ -20,25 +21,26 @@ class TTCModelData(object):
 
     def __init__(self):
 
-        self.training_files = []
+        self.training_files   = []
         self.validation_files = []
-        self.testing_files = []
+        self.testing_files    = []
 
-        self.training_samples = []
+        self.training_samples   = []
         self.validation_samples = []
-        self.testing_samples = []
+        self.testing_samples    = []
 
-        self.X_train = None
-        self.y_train = None
+        self.X_train      = None
+        self.y_train      = None
         self.X_validation = None
         self.y_validation = None
-        self.X_test = None
-        self.y_test = None
+        self.X_test       = None
+        self.y_test       = None
 
         self.complete_features = []
-        self.max_timesteps = None
-
-        self.Xscaler = None
+        self.max_timesteps     = None
+        self.xscaler           = None
+        self.xscaler_mins      = None
+        self.xscaler_maxs      = None
 
     def load_raw_sample_files(self, filelist, **X_pd_kwargs):
         self.training_files,   \
@@ -53,6 +55,15 @@ class TTCModelData(object):
         self._fit_x_scaler()
 
         self._load_numpy_data()
+
+    def load_prediction_files(self, filelist, **X_pd_kwargs):
+        prediction_samples = self._preprocess_sample_files(filelist, 'prediction file', **X_pd_kwargs)
+
+        for bs in prediction_samples:
+            bs.pad_feature_columns(self.complete_features)
+
+        X = np.concatenate([self.get_shaped_features_X(bs) for bs in prediction_samples])
+        return X
 
 
     def split_population(self, filelist):
@@ -72,6 +83,7 @@ class TTCModelData(object):
             [filelist[idx] for idx in validation_indices],
             [filelist[idx] for idx in testing_indices],
         )
+
 
     def _preprocess_sample_files(self, filelist, descr=None, **X_pd_kwargs):
         """
@@ -99,33 +111,38 @@ class TTCModelData(object):
         for bs in (self.training_samples + self.validation_samples + self.testing_samples):
             bs.pad_feature_columns(self.complete_features)
 
+
     def _fit_x_scaler(self):
         """
         Must be called after self._homogenize_features()
         """
         # copy=True. don't want to touch the cache's numpy array in bs
-        self.Xscaler = preprocessing.MinMaxScaler((-0.99999999, 1),copy=True)
+        self.xscaler = preprocessing.MinMaxScaler((CONST_XSCALER_MIN, CONST_XSCALER_MAX), copy=True)
         for bs in (self.training_samples + self.validation_samples):
-            self.Xscaler.partial_fit(bs.get_dfI_values())
+            self.xscaler.partial_fit(bs.get_dfI_values())
 
 
     def _load_numpy_data(self):
         """
         Set up the numpy X_train, y_train, X_validation etc ..
         """
-        self.X_train, self.y_train           = self.convert_to_numpy(self.training_samples,   "training reshaped")
+        self.X_train,      self.y_train      = self.convert_to_numpy(self.training_samples,   "training reshaped")
         self.X_validation, self.y_validation = self.convert_to_numpy(self.validation_samples, "validation reshaped")
-        self.X_test, self.y_test             = self.convert_to_numpy(self.testing_samples,    "testing reshaped")
+        self.X_test,       self.y_test       = self.convert_to_numpy(self.testing_samples,    "testing reshaped")
+
+        X_pop = np.concatenate((self.X_train, self.X_validation))
+        self.xscaler_mins = np.nanmin( np.nanmin( X_pop, axis=0), axis=0)
+        self.xscaler_maxs = np.nanmax( np.nanmax( X_pop, axis=0), axis=0)
 
 
-    def convert_to_numpy(self, batchSamples, descr=None):
+    def convert_to_numpy(self, batch_samples, descr=None):
         """
         BatchSample deals in pandas.DataFrames
         TTCModelData deals in numpy.nparrays
         """
 
-        X_pop = np.concatenate([self.get_shaped_features_X(bs) for bs in batchSamples])
-        y_pop = np.concatenate([self.get_shaped_y(bs)          for bs in batchSamples])
+        X_pop = np.concatenate([self.get_shaped_features_X(bs) for bs in batch_samples])
+        y_pop = np.concatenate([self.get_shaped_y(bs)          for bs in batch_samples])
 
         assert type(X_pop) == np.ndarray
         assert type(y_pop) == np.ndarray
@@ -135,17 +152,17 @@ class TTCModelData(object):
         return X_pop, y_pop
 
 
-    def get_shaped_features_X(self, batchSample):
+    def get_shaped_features_X(self, batch_sample):
         """
         NB!!!.
         ToDo: Add all other (bool, datetime, timedelta & numeric) features back in.
         """
 
-        # Xscaler is copy=True
-        scaled = self.Xscaler.transform(batchSample.get_dfI_values())
+        # xscaler is copy=True
+        scaled = self.xscaler.transform(batch_sample.get_dfI_values())
 
         # If using keras batch normalization ...
-        # scaled = batchSample.get_dfI_values()
+        # scaled = batch_sample.get_dfI_values()
 
         # Fall the 2D wall forward
         npRotated = scaled[np.newaxis, :, :]
@@ -172,34 +189,49 @@ class TTCModelData(object):
 
         return npPaddedTimeSteps
 
-    def get_shaped_y(self, batchSample):
-        return np.repeat(batchSample.dfy['finish_watershedded'].values, self.max_timesteps)
+    def get_shaped_y(self, batch_sample):
+        return np.repeat(batch_sample.dfy['finish_watershedded'].values, self.max_timesteps)
 
-    def _save_batch_samples(self, filename, batchSamples, samples_path):
+
+    def _save_batch_samples(self, filename, batch_samples, samples_path):
         """
         Write out all the BatchSample's pd.DataFrame stuff
         :param filename:
-        :param batchSamples:
+        :param batch_samples:
         :return:
         """
-
         with pd.HDFStore(filename, mode='r+') as store:
-            for idx, bs in enumerate(batchSamples):
+            for idx, bs in enumerate(batch_samples):
                 # Groups
-                store['dataframes/training_samples/bs%05d/dfX' % idx] = bs.dfX
-                store['dataframes/training_samples/bs%05d/dfy' % idx] = bs.dfy
+                store['batch_samples/%s/bs%05d/dfX' % (samples_path, idx)] = bs.dfX
+                store['batch_samples/%s/bs%05d/dfy' % (samples_path, idx)] = bs.dfy
 
         with h5py.File(filename, 'r+') as h5f:  # mode='r+' append
-            for idx, bs in enumerate(batchSamples):
-                # Dummy group to hold BatchSample attributes
-                h5f.create_dataset('members/%s/bs%05d' % (samples_path, idx), (0,), dtype='i')
+            for idx, bs in enumerate(batch_samples):
                 #Attribs
-                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "CONST_COLNAME_PREFIX"]     = bs.CONST_COLNAME_PREFIX
-                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "event_time_col"]           = bs.event_time_col
-                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "event_label_col"]          = bs.event_label_col
-                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "_feature_padding_columns"] = bs._feature_padding_columns
-                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "filepath_or_buffer"]       = bs.filepath_or_buffer
-                h5f['members/%s/bs%05d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = bs.source_was_buffer
+                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "CONST_COLNAME_PREFIX"]     = bs.CONST_COLNAME_PREFIX
+                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "event_time_col"]           = bs.event_time_col
+                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "event_label_col"]          = bs.event_label_col
+                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "_feature_padding_columns"] = bs._feature_padding_columns
+                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "filepath_or_buffer"]       = bs.filepath_or_buffer
+                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = bs.source_was_buffer
+
+    def stash_xscaler(self, filename):
+        with h5py.File(filename, 'r+') as h5f:
+            #dt = h5py.special_dtype(vlen=np.unicode)
+            #h5f.create_dataset('misc/complete_features',  (len(self.complete_features), ), data=self.complete_features, dtype=dt)
+
+            # thx: http://stackoverflow.com/a/23223417
+            ascii_features = [n.encode("ascii", "ignore") for n in self.complete_features]
+            h5f.create_dataset('misc/complete_features', (len(ascii_features), ),
+                               'S%d' % len(max(ascii_features, key=len)), ascii_features)
+
+            h5f.create_dataset('misc/max_timesteps'      , data=self.max_timesteps )
+            h5f.create_dataset('misc/xscaler/min_'       , data=self.xscaler.min_ )
+            h5f.create_dataset('misc/xscaler/scale_'     , data=self.xscaler.scale_)
+            h5f.create_dataset('misc/xscaler/data_min_'  , data=self.xscaler.data_min_)
+            h5f.create_dataset('misc/xscaler/data_max_'  , data=self.xscaler.data_max_)
+            h5f.create_dataset('misc/xscaler/data_range_', data=self.xscaler.data_range_)
 
     def save_np_data_file(self, filename):
         with h5py.File(filename, 'w') as h5f:  # mode='w' overwrite
@@ -210,40 +242,59 @@ class TTCModelData(object):
             h5f.create_dataset('numpy/X_test',       data=self.X_test)
             h5f.create_dataset('numpy/y_test',       data=self.y_test)
 
+        self.stash_xscaler(filename)
+
         self._save_batch_samples(filename, self.training_samples  , "training_samples")
         self._save_batch_samples(filename, self.validation_samples, "validation_samples")
         self._save_batch_samples(filename, self.testing_samples   , "testing_samples")
 
 
-    def _load_batch_samples(self, filename, batchSamples, samples_path):
+    def _load_batch_samples(self, filename, samples_path, verbose=1):
         """
         Handle loading the pd.DataFrames of a BatchSample()
 
         :param filename:
-        :param batchSamples:
         :param samples_path:
         :return:
         """
+        disable_progbar = verbose < 1
         with pd.HDFStore(filename) as store:
             # Init
-            batchSamples = [BatchSample() for _ in store.keys() if re.match('^/dataframes/%s/bs\d+/dfX' %(samples_path), _)]
+            batch_samples = [BatchSample() for _ in store.keys() if re.match('^/dataframes/%s/bs\d+/dfX' %(samples_path), _)]
 
-            for idx, val in enumerate(tqdm([ _ for _ in store.keys() if re.match( '^/dataframes/%s/bs\d+/dfX' % samples_path, _)], desc=samples_path)):
+            for idx, val in enumerate(tqdm([ _ for _ in store.keys() if re.match( '^/dataframes/%s/bs\d+/dfX' % samples_path, _)],
+                                           desc=samples_path,
+                                           disable=disable_progbar)):
                 # Groups
-                batchSamples[idx].dfX = store[ 'dataframes/%s/bs%05d/dfX' % (samples_path, idx) ]
-                batchSamples[idx].dfy = store[ 'dataframes/%s/bs%05d/dfy' % (samples_path, idx) ]
+                batch_samples[idx].dfX = store[ 'batch_samples/%s/bs%05d/dfX' % (samples_path, idx) ]
+                batch_samples[idx].dfy = store[ 'batch_samples/%s/bs%05d/dfy' % (samples_path, idx) ]
 
-            for idx, val in enumerate([ _ for _ in store.keys() if re.match('members/%s' % samples_path, _ )]):
+            for idx, val in enumerate([ _ for _ in store.keys() if re.match('batch_samples/%s' % samples_path, _ )]):
                 # Attributes
-                batchSamples[idx].CONST_COLNAME_PREFIX     = store['members/%s/bs%05d' % (samples_path, idx)].attrs["CONST_COLNAME_PREFIX"]
-                batchSamples[idx].event_time_col           = store['members/%s/bs%05d' % (samples_path, idx)].attrs["event_time_col"]
-                batchSamples[idx].event_label_col          = store['members/%s/bs%05d' % (samples_path, idx)].attrs["event_label_col"]
-                batchSamples[idx]._feature_padding_columns = store['members/%s/bs%05d' % (samples_path, idx)].attrs["_feature_padding_columns"]
-                batchSamples[idx].filepath_or_buffer       = store['members/%s/bs%05d' % (samples_path, idx)].attrs["filepath_or_buffer"]
-                batchSamples[idx].source_was_buffer        = store['members/%s/bs%05d' % (samples_path, idx)].attrs["source_was_buffer"]
+                batch_samples[idx].CONST_COLNAME_PREFIX     = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["CONST_COLNAME_PREFIX"]
+                batch_samples[idx].event_time_col           = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["event_time_col"]
+                batch_samples[idx].event_label_col          = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["event_label_col"]
+                batch_samples[idx]._feature_padding_columns = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["_feature_padding_columns"]
+                batch_samples[idx].filepath_or_buffer       = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["filepath_or_buffer"]
+                batch_samples[idx].source_was_buffer        = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["source_was_buffer"]
 
+            return batch_samples
 
-    def load_np_data_file(self, filename):
+    def unstash_xscaler(self, filename):
+        with h5py.File(filename, 'r+') as h5f:
+            # ascii_features = [n.encode("ascii", "ignore") for n in self.complete_features]
+            # h5f.create_dataset('misc/complete_features', (len(ascii_features), 1), 'S512', ascii_features)
+            self.max_timesteps     = h5f['misc/max_timesteps'][...]
+            self.complete_features = [n.decode('utf-8') for n in h5f['misc/complete_features'][:]]
+
+            self.xscaler = preprocessing.MinMaxScaler((CONST_XSCALER_MIN, CONST_XSCALER_MAX), copy=True)
+            self.xscaler.min_        = h5f['misc/xscaler/min_'       ][:]
+            self.xscaler.scale_      = h5f['misc/xscaler/scale_'     ][:]
+            self.xscaler.data_min_   = h5f['misc/xscaler/data_min_'  ][:]
+            self.xscaler.data_max_   = h5f['misc/xscaler/data_max_'  ][:]
+            self.xscaler.data_range_ = h5f['misc/xscaler/data_range_'][:]
+
+    def load_np_data_file(self, filename, verbose=1):
         """
 
         """
@@ -255,11 +306,10 @@ class TTCModelData(object):
             self.X_test       = h5f['numpy/X_test'      ][:]
             self.y_test       = h5f['numpy/y_test'      ][:]
 
-        self._load_batch_samples(filename, self.training_samples,   "training_samples")
-        self._load_batch_samples(filename, self.validation_samples, "validation_samples")
-        self._load_batch_samples(filename, self.testing_samples,    "testing_samples")
+        self.unstash_xscaler(filename)
 
-        self._homogenize_features()
+        self.training_samples   = self._load_batch_samples(filename, "training_samples", verbose)
+        self.validation_samples = self._load_batch_samples(filename, "validation_samples", verbose)
+        self.testing_samples    = self._load_batch_samples(filename, "testing_samples", verbose)
 
-    def import_file(self, savefile):
-        pass
+

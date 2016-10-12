@@ -1,3 +1,5 @@
+import h5py
+import keras
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, TimeDistributedDense, Masking
 from keras.layers.wrappers import TimeDistributed
@@ -20,7 +22,10 @@ class ModelAbstract(object):
         os.environ['CUDA_HOME'] = '/usr/local/cuda'
 
         self.model = None
-        self.training_history = []
+        self.complete_features = None
+        self.max_timesteps     = None
+        self.xscaler_params    = None
+        self.training_history  = []
 
     def train(self, X_train, y_train, X_validation, y_validation, epochs, verbose=0):
         assert self.model is not None
@@ -39,14 +44,28 @@ class ModelAbstract(object):
         return self.training_history[-1]
 
 
-    def load(self, savefile):
-        self.model = TTCModelData()
-        self.modelData
+    def _load_keras_model(self, model_file):
+        self.model = keras.models.load_model(model_file)
+        self.sample_handler = TTCModelData()
+        self.sample_handler.unstash_xscaler(model_file)
 
 
-    def save(self, savefile):
-        return self.model.save(savefile)
+    def load(self, model_file):
+        self._load_keras_model(model_file)
+
+
+    def predict(self, model_file, sample_file, verbose=0, **X_pd_kwargs):
+        self._load_keras_model()
+        X = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
+
+        return self.model.predict(X, self.sample_handler.max_timesteps, verbose)
+
+
+    def save(self, modelData, save_file):
+        self.model.save(save_file)
+        modelData.stash_xscaler(save_file)
+
 
     def  buildModel(self, batch_size, timesteps, input_dim, in_neurons, hidden_layers, hidden_neurons, out_neurons,
-                        rnn_activation, dense_activation):
+                         rnn_activation, dense_activation):
         raise NotImplemented

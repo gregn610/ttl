@@ -224,7 +224,7 @@ class TestTTCModelData(unittest.TestCase):
         self.modelData.save_np_data_file(tmpfile.name)
 
         with h5py.File(tmpfile.name, 'r') as store:
-            self.assertEqual( ['dataframes', 'members', 'numpy'], list(store.keys()))
+            self.assertEqual( ['batch_samples', 'misc', 'numpy'], list(store.keys()))
 
             self.assertEqual( ['X_test',
                               'X_train',
