@@ -214,7 +214,7 @@ class TTCModelData(object):
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "event_label_col"]          = bs.event_label_col
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "_feature_padding_columns"] = bs._feature_padding_columns
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "filepath_or_buffer"]       = bs.filepath_or_buffer
-                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = bs.source_was_buffer
+                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = int(bs.source_was_buffer)
 
     def stash_xscaler(self, filename):
         with h5py.File(filename, 'r+') as h5f:
@@ -276,7 +276,7 @@ class TTCModelData(object):
                 batch_samples[idx].event_label_col          = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["event_label_col"]
                 batch_samples[idx]._feature_padding_columns = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["_feature_padding_columns"]
                 batch_samples[idx].filepath_or_buffer       = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["filepath_or_buffer"]
-                batch_samples[idx].source_was_buffer        = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["source_was_buffer"]
+                batch_samples[idx].source_was_buffer        = bool(store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["source_was_buffer"])
 
             return batch_samples
 
