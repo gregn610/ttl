@@ -7,6 +7,8 @@ from ModelAbstract import ModelAbstract
 
 
 class ModelSimpleRNN(ModelAbstract):
+    def __init__(self, *args, **kwargs):
+        super(ModelSimpleRNN, self).__init__(*args, **kwargs)
 
     def buildModel(self, batch_size, timesteps, input_dim, in_neurons, hidden_layers, hidden_neurons, out_neurons,
                          rnn_activation, dense_activation):
