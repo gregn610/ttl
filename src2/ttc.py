@@ -2,10 +2,10 @@
 """Time Till Complete.
 
 Usage:
-  ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] [-q | --quiet] <modelData.h5> LOGFILES ...
-  ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
-  ttc.py evaluate [--web [--web-port=<web-port>] [--xml]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
-  ttc.py predict  [--web [--web-port=<web-port>] [--xml]] [--watch [--interval=<seconds>]] [-q | --quiet] <modelFile.ttc> LOGFILE
+  ttc.py preprocess [--pandas-reader=(csv|excel|json|table)]<modelData.h5> LOGFILES ...
+  ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]]<modelFile.ttc> <modelData.h5>
+  ttc.py evaluate [--web [--web-port=<web-port>] [--xml]]<modelFile.ttc> <modelData.h5>
+  ttc.py predict  [--web [--web-port=<web-port>] [--xml]] [--watch [--interval=<seconds>]]<modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
   ttc.py --version
 
@@ -21,7 +21,6 @@ Options:
   --web-port=<web-port>                   The port to use for the HTTP interface [default: 8080]
   --xml                                   No HTML interface, just raw XML
   --reset                                 Overwrite any existing learning
-  -q --quiet                              Suppress output
   -h --help     Show this screen.
   --version     Show version.
 
@@ -35,6 +34,8 @@ Commands:
 """
 import os
 from docopt import docopt
+import sys
+
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Time Till Complete 1.0')
@@ -44,7 +45,7 @@ if __name__ == '__main__':
     os.environ['CUDA_HOME'] = '/usr/local/cuda'
 
     if arguments['preprocess'] == True:
-        print('preprocessing log files into %s' % (arguments['<modelData.h5>']))
+        print('preprocessing log files into %s' % (arguments['<modelData.h5>']), file=sys.stderr)
         from TTCModelData import TTCModelData
 
         modelData = TTCModelData()
@@ -66,11 +67,10 @@ if __name__ == '__main__':
 
         mlModel = ModelSimpleRNN()
         if os.path.isfile(arguments['<modelFile.ttc>']):
-                if arguments['--reset'] and not arguments['--quiet']:
-                    print('Overwriting %s' % arguments['<modelFile.ttc>'])
+                if arguments['--reset']:
+                    print('Overwriting %s' % arguments['<modelFile.ttc>'], file=sys.stderr)
                 else:
-                    if not arguments['--quiet']:
-                        print('Reloading %s' % arguments['<modelFile.ttc>'])
+                    print('Reloading %s' % arguments['<modelFile.ttc>'], file=sys.stderr)
                     mlModel.load_ml_model(arguments['<modelFile.ttc>'])
 
 
@@ -89,12 +89,12 @@ if __name__ == '__main__':
                       epochs =99,
                       verbose=1
                       )
-        print('Saving trained model to: %s' % arguments['<modelFile.ttc>'])
+        print('Saving trained model to: %s' % arguments['<modelFile.ttc>'], file=sys.stderr)
         mlModel.save_ml_model(modelData, arguments['<modelFile.ttc>'])
 
 
     elif arguments['evaluate'] == True:
-        print("Arguments:\n%s" %str(arguments))
+        print("Arguments:\n%s" %str(arguments), file=sys.stderr)
 
 
     elif arguments['predict'] == True:
@@ -106,5 +106,5 @@ if __name__ == '__main__':
         print(prediction)
 
     else:
-        print("Arguments:\n%s" % str(arguments))
+        print("Arguments:\n%s" % str(arguments), file=sys.stderr)
         #raise Exception # How did we get here?
