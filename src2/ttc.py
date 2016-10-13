@@ -44,6 +44,14 @@ if __name__ == '__main__':
     os.environ['LD_LIBRARY_PATH'] = '/usr/local/cuda/lib64'
     os.environ['CUDA_HOME'] = '/usr/local/cuda'
 
+    if arguments['--xml']:
+        from OutServiceXml import OutServiceXml
+        out = OutServiceXml()
+    else:
+        from OutServicePrint import OutServicePrint
+        out = OutServicePrint()
+
+
     if arguments['preprocess'] == True:
         print('preprocessing log files into %s' % (arguments['<modelData.h5>']), file=sys.stderr)
         from TTCModelData import TTCModelData
@@ -102,8 +110,8 @@ if __name__ == '__main__':
         from ModelSimpleRNN import ModelSimpleRNN
 
         mlModel = ModelSimpleRNN()
-        prediction = mlModel.predict(arguments['<modelFile.ttc>'], arguments['LOGFILE'])
-        print(prediction)
+        predictions = mlModel.predict(arguments['<modelFile.ttc>'], arguments['LOGFILE'])[0]
+        out.printPredictions(predictions, ml_model=arguments['<modelFile.ttc>'], sample_file=arguments['LOGFILE'] )
 
     else:
         print("Arguments:\n%s" % str(arguments), file=sys.stderr)
