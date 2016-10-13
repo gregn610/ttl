@@ -4,8 +4,8 @@
 Usage:
   ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] [-q | --quiet] <modelData.h5> LOGFILES ...
   ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
-  ttc.py evaluate [--web [--web-port=<web-port>] [--json]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
-  ttc.py predict  [--web [--web-port=<web-port>] [--json]] [--watch [--interval=<seconds>]] [-q | --quiet] <modelFile.ttc> LOGFILE
+  ttc.py evaluate [--web [--web-port=<web-port>] [--xml]] [-q | --quiet] <modelFile.ttc> <modelData.h5>
+  ttc.py predict  [--web [--web-port=<web-port>] [--xml]] [--watch [--interval=<seconds>]] [-q | --quiet] <modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
   ttc.py --version
 
@@ -19,7 +19,7 @@ Options:
   --interval=<seconds>                    If monitoring how frequent to update prediction [default: 15 ]
   --web                                   Results to an HTTP interface
   --web-port=<web-port>                   The port to use for the HTTP interface [default: 8080]
-  --json                                  No HTML interface, just raw JSON
+  --xml                                   No HTML interface, just raw XML
   --reset                                 Overwrite any existing learning
   -q --quiet                              Suppress output
   -h --help     Show this screen.
@@ -71,7 +71,7 @@ if __name__ == '__main__':
                 else:
                     if not arguments['--quiet']:
                         print('Reloading %s' % arguments['<modelFile.ttc>'])
-                    mlModel.load(arguments['<modelFile.ttc>'])
+                    mlModel.load_ml_model(arguments['<modelFile.ttc>'])
 
 
         mlModel.buildModel(batch_size        = modelData.X_train.shape[1],
@@ -90,7 +90,7 @@ if __name__ == '__main__':
                       verbose=1
                       )
         print('Saving trained model to: %s' % arguments['<modelFile.ttc>'])
-        mlModel.save(modelData, arguments['<modelFile.ttc>'])
+        mlModel.save_ml_model(modelData, arguments['<modelFile.ttc>'])
 
 
     elif arguments['evaluate'] == True:
@@ -98,6 +98,7 @@ if __name__ == '__main__':
 
 
     elif arguments['predict'] == True:
+        # ToDo: Think about watching open file or stdin like tail -f
         from ModelSimpleRNN import ModelSimpleRNN
 
         mlModel = ModelSimpleRNN()

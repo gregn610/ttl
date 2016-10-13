@@ -28,6 +28,7 @@ class TTCModelData(object):
         self.training_samples   = []
         self.validation_samples = []
         self.testing_samples    = []
+        self.prediction_samples = []
 
         self.X_train      = None
         self.y_train      = None
@@ -57,12 +58,13 @@ class TTCModelData(object):
         self._load_numpy_data()
 
     def load_prediction_files(self, filelist, **X_pd_kwargs):
-        prediction_samples = self._preprocess_sample_files(filelist, 'prediction file', **X_pd_kwargs)
+        self.prediction_samples = self._preprocess_sample_files(filelist, 'prediction file', **X_pd_kwargs)
 
-        for bs in prediction_samples:
+        for bs in self.prediction_samples:
             bs.pad_feature_columns(self.complete_features)
 
-        X = np.concatenate([self.get_shaped_features_X(bs) for bs in prediction_samples])
+        X = np.concatenate([self.get_shaped_features_X(bs) for bs in self.prediction_samples])
+        # ToDo: test is X the right shape?
         return X
 
 

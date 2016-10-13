@@ -46,18 +46,27 @@ class ModelAbstract(object):
         self.sample_handler.unstash_xscaler(model_file)
 
 
-    def load(self, model_file):
+    def load_ml_model(self, model_file):
         self._load_keras_model(model_file)
 
 
     def predict(self, model_file, sample_file, verbose=0, **X_pd_kwargs):
         self._load_keras_model(model_file)
+        # this takes a list but, for now, only ever send in 1 sample_file
         X = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
 
-        return self.model.predict(X, self.sample_handler.max_timesteps, verbose)
+        raw_predictions = self.model.predict(X, self.sample_handler.max_timesteps, verbose)
+        predictions = []
+        for idx_bs, bs in enumerate(self.sample_handler.prediction_samples):
+            predictions.append([])
+            for rpred in raw_predictions:
+                predictions[-1].append(bs.regularizedToDateTime(bs.event_time_col, rpred[0]) )
+
+        return predictions
 
 
-    def save(self, modelData, save_file):
+
+    def save_ml_model(self, modelData, save_file):
         self.model.save(save_file)
         modelData.stash_xscaler(save_file)
 
