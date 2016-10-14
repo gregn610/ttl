@@ -111,8 +111,6 @@ class TestTTCModelData2(unittest.TestCase):
             "2004-03-31.log", "2004-07-01.log", "2004-10-01.log",
             "2004-04-01.log", "2004-07-02.log", "2004-10-02.log",
         ]))
-        self.MODELDATA_SAVE_FILE = "modeldata.h5"
-        self.MODEL_SAVE_FILE = "model.ttc"
 
         self.modelData = TTCModelData()
         self.modelData.load_raw_sample_files(self.SAMPLE_FILES)
@@ -162,4 +160,25 @@ class TestTTCModelData2(unittest.TestCase):
         lleft  = self.modelData.xscaler.transform(bs.get_dfI_values())
         rright = modelData2.xscaler.transform(bs.get_dfI_values())
 
+        # os.unlink(tmpfile.name)
+
         self.assertTrue(np.allclose(lleft, rright))
+
+
+    def test_get_shaped_y(self):
+        """If a batch_sample is smaller than self.max_timesteps ,then the Y should be padded with CONST_EMPTY"""
+
+        from BatchSample import BatchSample
+
+        bs2 = BatchSample()
+        bs2.process_file(self.SAMPLE_FILES[0], 0, 1)
+        bs2.dfX.drop(bs2.dfX.index[-20:], inplace=True)
+
+        # this needs modelData.max_timesteps which is only set after some other files have been _homogenized()
+        # Thats why it's in here and not the other TestTTCModelData
+        y2 = self.modelData.get_shaped_y(bs2)
+        lleft  =  np.ones(( 20 )) * CONST_EMPTY
+        rright = y2[-20:]
+        self.assertTrue(np.allclose(lleft, rright ), "Left:%s\nRight:%s" %(str(lleft), str(rright)))
+
+

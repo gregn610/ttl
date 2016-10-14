@@ -40,8 +40,6 @@ class TTCModelData(object):
         self.complete_features = []
         self.max_timesteps     = None
         self.xscaler           = None
-        self.xscaler_mins      = None
-        self.xscaler_maxs      = None
 
     def load_raw_sample_files(self, filelist, **X_pd_kwargs):
         self.training_files,   \
@@ -133,8 +131,6 @@ class TTCModelData(object):
         self.X_test,       self.y_test       = self.convert_to_numpy(self.testing_samples,    "testing reshaped")
 
         X_pop = np.concatenate((self.X_train, self.X_validation))
-        self.xscaler_mins = np.nanmin( np.nanmin( X_pop, axis=0), axis=0)
-        self.xscaler_maxs = np.nanmax( np.nanmax( X_pop, axis=0), axis=0)
 
 
     def convert_to_numpy(self, batch_samples, descr=None):
@@ -192,7 +188,10 @@ class TTCModelData(object):
         return npPaddedTimeSteps
 
     def get_shaped_y(self, batch_sample):
-        return np.repeat(batch_sample.dfy['finish_watershedded'].values, self.max_timesteps)
+        y = np.ones((self.max_timesteps)) * CONST_EMPTY
+        cnt  = len(batch_sample.dfX.index)
+        y[0:cnt ] = np.repeat(batch_sample.dfy['finish_watershedded'].values, cnt )
+        return y
 
 
     def _save_batch_samples(self, filename, batch_samples, samples_path):
