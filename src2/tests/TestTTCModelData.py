@@ -113,8 +113,6 @@ class TestTTCModelData(unittest.TestCase):
 "2004-03-31.log", "2004-07-01.log", "2004-10-01.log",
 "2004-04-01.log", "2004-07-02.log", "2004-10-02.log",
         ]))
-        self.MODELDATA_SAVE_FILE    = "modeldata.npz"
-        self.MODEL_SAVE_FILE        = "testing_WIP_08.model.npz"
 
         self.modelData              = TTCModelData()
 
@@ -300,5 +298,3 @@ class TestTTCModelData(unittest.TestCase):
         pass
 
 
-    def test_get_shaped_y(self):
-        pass
