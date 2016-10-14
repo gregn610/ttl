@@ -181,7 +181,7 @@ class BatchSample(object):
             dfI.fillna(CONST_EMPTY, inplace=True)
             dfI.drop(self.event_time_col, inplace=True, axis=1)
 
-            # Do columns.tolist() to make sure that the features alway line up in the same order
+            # Do columns.tolist() to make sure that the features always line up in the same order
             self._dfI = dfI[sorted(dfI.columns.tolist())]
 
         return self._dfI
