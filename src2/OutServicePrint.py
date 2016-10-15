@@ -1,5 +1,3 @@
-from lxml import etree
-
 from OutService import OutService
 
 class OutServicePrint(OutService):

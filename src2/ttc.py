@@ -4,8 +4,8 @@
 Usage:
   ttc.py preprocess [--pandas-reader=(csv|excel|json|table)]<modelData.h5> LOGFILES ...
   ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]]<modelFile.ttc> <modelData.h5>
-  ttc.py evaluate [--web [--web-port=<web-port>] [--xml]]<modelFile.ttc> <modelData.h5>
   ttc.py predict  [--web [--web-port=<web-port>] [--xml]] [--watch [--interval=<seconds>]]<modelFile.ttc> LOGFILE
+  ttc.py graph [--web [--web-port=<web-port>] [--xml]]<modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
   ttc.py --version
 
@@ -28,7 +28,7 @@ Options:
 Commands:
   preprocess  Preprocess historic log files into <modelData.h5>
   train       Read <modelData.h5> and apply the machine learning
-  evaluate    Assess the accuracy of the model
+  graph    Assess the accuracy of the model.
   predict     Read or monitor a log file and make a prediction or ongoing predictions if in watch mode
 
 """
@@ -36,6 +36,7 @@ import os
 from docopt import docopt
 import sys
 
+from OutServiceGraphics import OutServiceGraphics
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Time Till Complete 1.0')
@@ -101,8 +102,16 @@ if __name__ == '__main__':
         mlModel.save_ml_model(modelData, arguments['<modelFile.ttc>'])
 
 
-    elif arguments['evaluate'] == True:
-        print("Arguments:\n%s" %str(arguments), file=sys.stderr)
+    elif arguments['graph'] == True:
+        # ToDo: add another docopt arg to graph predictions or learning rates or SVG(model_to_dot(...))
+        from ModelSimpleRNN import ModelSimpleRNN
+
+        mlModel = ModelSimpleRNN()
+        bs, predictions, idx = mlModel.evaluate(arguments['<modelFile.ttc>'], arguments['LOGFILE'])
+
+        out = OutServiceGraphics()
+        out.printEvaluation(bs, predictions, data_filename=None)
+
 
 
     elif arguments['predict'] == True:

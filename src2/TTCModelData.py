@@ -62,8 +62,9 @@ class TTCModelData(object):
             bs.pad_feature_columns(self.complete_features)
 
         X = np.concatenate([self.get_shaped_features_X(bs) for bs in self.prediction_samples])
-        # ToDo: test is X the right shape?
-        return X
+        y = np.concatenate([self.get_shaped_y(bs)          for bs in self.prediction_samples])
+
+        return X, y
 
 
     def split_population(self, filelist):

@@ -11,6 +11,7 @@ import numpy as np
 import uuid
 import os
 from Consts import CONST_EMPTY
+from DebugBatchSample import DebugBatchSample
 from TTCModelData import TTCModelData
 
 
@@ -50,10 +51,41 @@ class ModelAbstract(object):
         self._load_keras_model(model_file)
 
 
+    def evaluate(self, model_file, sample_file, verbose=0, **X_pd_kwargs):
+        self._load_keras_model(model_file)
+        # this takes a list but, for now, only ever send in 1 sample_file
+        X, y = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
+
+        # Convert to a DebugBatchSample class
+        debugBatchSample = self.sample_handler.prediction_samples[0]
+        debugBatchSample.__class__ = DebugBatchSample
+        debugBatchSample._conversion_from_BatchSample()
+
+        predictions = []
+
+        # Maybe should predict on batchs Xpop[0:idx,:,:]
+        # and mode.reset() for each new Xpop ???
+
+        for sliced in X:
+            p = self.model.predict(sliced[np.newaxis, :, :])
+            # print('p: %s' % str(p))
+            predictions.append(
+                debugBatchSample.regularizedToDateTime(debugBatchSample.event_time_col, (p[0, 0]))
+            )
+
+        idx = 0
+        return debugBatchSample, predictions, idx
+
+
+
+
+
+
+
     def predict(self, model_file, sample_file, verbose=0, **X_pd_kwargs):
         self._load_keras_model(model_file)
         # this takes a list but, for now, only ever send in 1 sample_file
-        X = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
+        X, y = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
 
         raw_predictions = self.model.predict(X, self.sample_handler.max_timesteps, verbose)
         predictions = []
