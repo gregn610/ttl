@@ -81,16 +81,18 @@ if __name__ == '__main__':
                     mlModel.load_ml_model(arguments['<modelFile.ttc>'])
 
 
-        mlModel.buildModel(batch_size        = modelData.X_train.shape[1],
-                           timesteps         = modelData.X_train.shape[1],
-                           input_dim         = modelData.X_train.shape[2],
-                           in_neurons        = 333,
-                           hidden_layers     = 1,
-                           hidden_neurons    = 333,
-                           out_neurons       = 333,
-                           rnn_activation    = 'tanh',
-                           dense_activation  = 'linear'
-                           )
+        if mlModel.model is None: # either no file or --reset
+            mlModel.buildModel(batch_size        = modelData.X_train.shape[1],
+                               timesteps         = modelData.X_train.shape[1],
+                               input_dim         = modelData.X_train.shape[2],
+                               in_neurons        = 333,
+                               hidden_layers     = 1,
+                               hidden_neurons    = 333,
+                               out_neurons       = 333,
+                               rnn_activation    = 'tanh',
+                               dense_activation  = 'linear'
+                               )
+
         mlModel.train(modelData.X_train, modelData.y_train,
                       modelData.X_validation, modelData.y_validation,
                       epochs = 9,
