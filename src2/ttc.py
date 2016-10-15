@@ -95,7 +95,7 @@ if __name__ == '__main__':
                            )
         mlModel.train(modelData.X_train, modelData.y_train,
                       modelData.X_validation, modelData.y_validation,
-                      epochs =99,
+                      epochs = 9,
                       verbose=1
                       )
         print('Saving trained model to: %s' % arguments['<modelFile.ttc>'], file=sys.stderr)

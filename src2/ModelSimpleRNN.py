@@ -47,8 +47,8 @@ class ModelSimpleRNN(ModelAbstract):
         self.model.add(Dense(1,
                        activation        = dense_activation,
                        ))
-#        opt = SGD(lr = 0.05, decay = 0.1, momentum = 0.9, nesterov = True)
-        opt = RMSprop(decay=1e-3)
+#        opt = RMSprop(decay=1e-3)
+        opt = SGD(lr = 0.0005, decay = 0.0001, momentum = 0.009, nesterov = True)
 
         self.model.compile(loss      = "mean_squared_error",
                       optimizer = opt,
