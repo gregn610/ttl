@@ -237,12 +237,12 @@ class TTCModelData(object):
 
     def save_np_data_file(self, filename):
         with h5py.File(filename, 'w') as h5f:  # mode='w' overwrite
-            h5f.create_dataset('numpy/X_train',      data=self.X_train)
-            h5f.create_dataset('numpy/y_train',      data=self.y_train)
-            h5f.create_dataset('numpy/X_validation', data=self.X_validation)
-            h5f.create_dataset('numpy/y_validation', data=self.y_validation)
-            h5f.create_dataset('numpy/X_test',       data=self.X_test)
-            h5f.create_dataset('numpy/y_test',       data=self.y_test)
+            h5f.create_dataset('numpy/X_train',      compression="gzip", compression_opts=9, data=self.X_train)
+            h5f.create_dataset('numpy/y_train',      compression="gzip", compression_opts=9, data=self.y_train)
+            h5f.create_dataset('numpy/X_validation', compression="gzip", compression_opts=9, data=self.X_validation)
+            h5f.create_dataset('numpy/y_validation', compression="gzip", compression_opts=9, data=self.y_validation)
+            h5f.create_dataset('numpy/X_test',       compression="gzip", compression_opts=9, data=self.X_test)
+            h5f.create_dataset('numpy/y_test',       compression="gzip", compression_opts=9, data=self.y_test)
 
         self.stash_xscaler(filename)
 
