@@ -1,3 +1,7 @@
+import pandas as pd
+import numpy as np
+from BatchSample import BatchSample
+
 class DebugBatchSample(BatchSample):
     """
     This is superfunk way to cast to subclass. Thanks: http://stackoverflow.com/a/597324/266387
@@ -15,11 +19,11 @@ class DebugBatchSample(BatchSample):
                                 'parse_dates' : [0,],
                                }
 
-        self.debug_dfdy = pd.read_csv(self.debug_filepath_or_buffer, **self.debug_pd_kwargs)
+        self.debug_dfy = pd.read_csv(self.debug_filepath_or_buffer, **self.debug_pd_kwargs)
         self.debug_dfX = pd.DataFrame()
         self.debug_dfX['__dbg_criticalpath_mask'] = self.dfX[self.event_label_col].str.contains('Critical path event')
 
-        self.debug_dfdy['__dbg_realtime_watershedded']= self.debug_dfdy['__dbg_realtime_finish'].apply(
+        self.debug_dfy['__dbg_realtime_watershedded']= self.debug_dfy['__dbg_realtime_finish'].apply(
                             lambda row: (row - self.dt_watersheds[self.event_time_col]) / np.timedelta64(1,'m')
                         )
 
