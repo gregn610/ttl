@@ -78,38 +78,6 @@ class TestTTCModelData2(unittest.TestCase):
             "2004-02-27.log",
             "2004-02-28.log",
             "2004-02-29.log",
-            "2004-03-01.log",
-            "2004-03-02.log",
-            "2004-03-03.log",
-            "2004-03-04.log",
-            "2004-03-05.log",
-            "2004-03-06.log",
-            "2004-03-07.log",
-            "2004-03-08.log",
-            "2004-03-09.log",
-            "2004-03-10.log",
-            "2004-03-11.log",
-            "2004-03-12.log",
-            "2004-03-13.log",
-            "2004-03-14.log",
-            "2004-03-15.log",
-            "2004-03-16.log",
-            "2004-03-17.log",
-            "2004-03-18.log",
-            "2004-03-19.log",
-            "2004-03-20.log",
-            "2004-03-21.log",
-            "2004-03-22.log",
-            "2004-03-23.log",
-            "2004-03-24.log",
-            "2004-03-25.log",
-            "2004-03-26.log",
-            "2004-03-27.log",
-            "2004-03-28.log",
-            "2004-03-29.log",
-            "2004-03-30.log",
-            "2004-03-31.log",
-            "2004-04-01.log",
         ]))
 
         self.modelData = TTCModelData()
@@ -189,5 +157,35 @@ class TestTTCModelData2(unittest.TestCase):
         bs = self.modelData.training_samples[0]
         scaled = self.modelData.xscaler.transform(bs.get_dfI_values())
 
-        self.assertTrue(np.allclose(bs.get_dfI_values(), self.dataModel.xscaler.inverse_tranform( scaled)))
+        self.assertTrue(np.allclose(bs.get_dfI_values(), self.modelData.xscaler.inverse_transform( scaled)))
 
+    def test_something(self):
+        """There's something not cool with X_training. Make sure it's right"""
+        for idx, bs in enumerate(self.modelData.training_samples):
+            _dbg_lleft_file = bs.filepath_or_buffer
+            lleft = bs.get_dfI_values()
+            left_dfx_series = bs.dfX[bs.event_time_col]
+
+            # should be the last exploded nb_sample for that batch_sample
+            x_sliced = self.modelData.X_train[(idx+1)*self.modelData.max_timesteps -1,:,:]
+            sliced_unscaled = self.modelData.xscaler.inverse_transform(x_sliced)
+
+            self.assertTrue(np.allclose(lleft, sliced_unscaled))
+            self.assertTrue(np.allclose(lleft[-1,-1], sliced_unscaled[-1,-1]),'lleft:%s\nsliced_unscaled:%s'%(
+                    str(lleft[-1,-1]), str(sliced_unscaled[-1,-1])
+                )
+            )
+            reg_left  = bs.regularizedToDateTime(bs.event_time_col, lleft[-1,-1])
+            reg_right = bs.regularizedToDateTime(bs.event_time_col, sliced_unscaled[-1,-1])
+            print('reg_left: %s\nreg_right:%s'% (str(reg_left), str(reg_right)))
+            self.assertEqual(reg_left, reg_right)
+            #self.assertEqual(left_dfx_series[-1], reg_right)
+            # ToDo: also compare to y
+
+
+    def test_homogenize_features(self):
+        for idx in (range(1, len(self.modelData.training_samples))):
+            first = self.modelData.training_samples[idx - 1]._get_dfI()
+            second = self.modelData.training_samples[idx]._get_dfI()
+            assert (np.array_equal(first.columns.values, second.columns.values))
+        print('All asserts passed')

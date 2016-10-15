@@ -86,6 +86,19 @@ class TestBatchSample(unittest.TestCase):
         self.assertEqual(pd.Timestamp('2005-11-11 20:34:34.068000'),
                          self.batchSample.regularizedToDateTime(self.batchSample.event_time_col, 1234.5678))
 
+
+    def test_get_dfI(self):
+        """dfX values should survive a round-trip to dfI"""
+        bs = self.batchSample
+
+        dfI = bs._get_dfI(refresh=True)
+        sI = dfI['0000__C0_watershedded']
+        sI = sI.apply(lambda dt_water : bs.regularizedToDateTime(bs.event_time_col, dt_water))
+
+        self.assertTrue((bs.dfX[bs.event_time_col] == sI).all())
+
+
+
     def test_get_dfI_values(self):
         """
 
