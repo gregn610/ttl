@@ -36,8 +36,6 @@ import os
 from docopt import docopt
 import sys
 
-from OutServiceGraphics import OutServiceGraphics
-
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Time Till Complete 1.0')
 
@@ -105,6 +103,7 @@ if __name__ == '__main__':
     elif arguments['graph'] == True:
         # ToDo: add another docopt arg to graph predictions or learning rates or SVG(model_to_dot(...))
         from ModelSimpleRNN import ModelSimpleRNN
+        from OutServiceGraphics import OutServiceGraphics
 
         mlModel = ModelSimpleRNN()
         bs, predictions, idx = mlModel.evaluate(arguments['<modelFile.ttc>'], arguments['LOGFILE'])
