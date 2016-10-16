@@ -9,7 +9,7 @@ class TestMLModel(unittest.TestCase):
 
         # ToDo: Think about population needed, performance and fixed test_model.h5 file implications
 
-        self.model = ModelSimpleRNN()
+        self.model = ModelLSTM()
 
 
 

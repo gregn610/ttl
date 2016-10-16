@@ -1,12 +1,9 @@
 from ModelAbstract import ModelAbstract
 from Consts import CONST_EMPTY
 
-from keras.layers import Masking, SimpleRNN, Dense, LSTM
+from keras.layers import Masking, Dense, TimeDistributed, LSTM
 from keras.models import Sequential
 from keras.optimizers import SGD, RMSprop, Nadam
-from keras.layers import Input, Dense
-from keras.models import Model
-from keras.layers import TimeDistributed
 
 
 
@@ -18,11 +15,21 @@ class ModelLSTM(ModelAbstract):
                    rnn_activation, dense_activation,
                    nb_epoch, X_train, y_train, X_validation, y_validation, verbose=0):
         self.model = Sequential()
-        self.model.add(Masking(batch_input_shape=(None, timesteps, input_dim), mask_value=CONST_EMPTY, ))
-        self.model.add(LSTM(in_neurons, input_dim=input_dim, return_sequences=True, activation='tanh'))
-        self.model.add(TimeDistributed(Dense(hidden_neurons)))
-        self.model.add(LSTM(out_neurons, input_dim=hidden_neurons, return_sequences=False, activation='tanh'))
-        self.model.add(Dense(1, activation='linear'))
+        self.model.add(Masking(
+            batch_input_shape=(None, timesteps, input_dim), mask_value=CONST_EMPTY, )
+        )
+        self.model.add(LSTM(
+            in_neurons, input_dim=input_dim, return_sequences=True, activation=rnn_activation)
+        )
+        self.model.add(TimeDistributed(
+            Dense(hidden_neurons))
+        )
+        self.model.add(LSTM(
+            out_neurons, input_dim=hidden_neurons, return_sequences=False, activation=rnn_activation)
+        )
+        self.model.add(Dense(
+            1, activation=dense_activation)
+        )
 
         opt = SGD(lr=0.0005, decay=0.00003333, )
         self.model.compile(loss="mean_squared_error",
