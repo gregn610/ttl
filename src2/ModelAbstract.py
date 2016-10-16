@@ -24,7 +24,7 @@ class ModelAbstract(object):
         self.xscaler_params    = None
         self.training_history  = []
 
-    def train(self, X_train, y_train, X_validation, y_validation, epochs, verbose=0):
+    def train(self, X_train, y_train, X_validation, y_validation, batch_size, epochs, verbose=0):
         assert self.model is not None
 
         self.training_history.append(
@@ -32,7 +32,7 @@ class ModelAbstract(object):
                 X_train,
                 y_train,
                 nb_epoch=epochs,
-    #                batch_size=batch_size,
+                batch_size=batch_size,
                 shuffle=False,
                 validation_data=(X_validation, y_validation),
                 verbose= verbose,

@@ -5,7 +5,7 @@ import pandas as pd
 
 class TestMLModel(unittest.TestCase):
     def setUp(self):
-        from ModelSimpleRNN import ModelSimpleRNN
+        from ModelLSTM import ModelLSTM
 
         # ToDo: Think about population needed, performance and fixed test_model.h5 file implications
 

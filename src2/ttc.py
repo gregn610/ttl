@@ -67,12 +67,12 @@ if __name__ == '__main__':
 
     elif arguments['train'] == True:
         from TTCModelData import TTCModelData
-        from ModelSimpleRNN import ModelSimpleRNN
+        from ModelLSTM import ModelLSTM
 
         modelData = TTCModelData()
         modelData.load_np_data_file(arguments['<modelData.h5>'] )
 
-        mlModel = ModelSimpleRNN()
+        mlModel = ModelLSTM()
         if os.path.isfile(arguments['<modelFile.ttc>']):
                 if arguments['--reset']:
                     print('Overwriting %s' % arguments['<modelFile.ttc>'], file=sys.stderr)
@@ -85,18 +85,19 @@ if __name__ == '__main__':
             mlModel.buildModel(batch_size        = modelData.X_train.shape[1],
                                timesteps         = modelData.X_train.shape[1],
                                input_dim         = modelData.X_train.shape[2],
-                               in_neurons        = 333,
+                               in_neurons        = 99,
                                hidden_layers     = 1,
-                               hidden_neurons    = 333,
-                               out_neurons       = 333,
+                               hidden_neurons    = 99,
+                               out_neurons       = 99,
                                rnn_activation    = 'tanh',
                                dense_activation  = 'linear'
                                )
 
         mlModel.train(modelData.X_train, modelData.y_train,
                       modelData.X_validation, modelData.y_validation,
-                      epochs = 9,
-                      verbose=1
+                      batch_size = modelData.X_train.shape[1],
+                      epochs     = 21,
+                      verbose    = 1
                       )
         print('Saving trained model to: %s' % arguments['<modelFile.ttc>'], file=sys.stderr)
         mlModel.save_ml_model(modelData, arguments['<modelFile.ttc>'])
@@ -104,10 +105,10 @@ if __name__ == '__main__':
 
     elif arguments['graph'] == True:
         # ToDo: add another docopt arg to graph predictions or learning rates or SVG(model_to_dot(...))
-        from ModelSimpleRNN import ModelSimpleRNN
+        from ModelLSTM import ModelLSTM
         from OutServiceGraphics import OutServiceGraphics
 
-        mlModel = ModelSimpleRNN()
+        mlModel = ModelLSTM()
         bs, predictions, idx = mlModel.evaluate(arguments['<modelFile.ttc>'], arguments['LOGFILE'])
 
         out = OutServiceGraphics()
@@ -117,9 +118,9 @@ if __name__ == '__main__':
 
     elif arguments['predict'] == True:
         # ToDo: Think about watching open file or stdin like tail -f
-        from ModelSimpleRNN import ModelSimpleRNN
+        from ModelLSTM import ModelLSTM
 
-        mlModel = ModelSimpleRNN()
+        mlModel = ModelLSTM()
         predictions = mlModel.predict(arguments['<modelFile.ttc>'], arguments['LOGFILE'])[0]
         out.printPredictions(predictions, ml_model=arguments['<modelFile.ttc>'], sample_file=arguments['LOGFILE'] )
 
