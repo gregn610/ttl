@@ -1,5 +1,5 @@
-*.h5
-*.ttc
+**/*.h5
+**/*.ttc
 **/.DS_Store
 
 # Created by https://www.gitignore.io/api/linux,pycharm,python
