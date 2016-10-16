@@ -30,7 +30,7 @@ class ModelLSTM(ModelAbstract):
             1, activation=dense_activation)
         )
 
-        opt = SGD(lr=0.0005, decay=0.00003333, )
+        opt = SGD(lr=0.00025, decay=0.00003333, )
         self.model.compile(loss="mean_squared_error",
                            optimizer=opt,
                            metrics=['accuracy', ]

@@ -85,10 +85,10 @@ if __name__ == '__main__':
             mlModel.buildModel(batch_size        = modelData.X_train.shape[1],
                                timesteps         = modelData.X_train.shape[1],
                                input_dim         = modelData.X_train.shape[2],
-                               in_neurons        = 99,
+                               in_neurons        = 199,
                                hidden_layers     = 1,
-                               hidden_neurons    = 99,
-                               out_neurons       = 99,
+                               hidden_neurons    = 199,
+                               out_neurons       = 199,
                                rnn_activation    = 'tanh',
                                dense_activation  = 'linear'
                                )
