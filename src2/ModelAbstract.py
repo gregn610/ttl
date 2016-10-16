@@ -104,6 +104,5 @@ class ModelAbstract(object):
 
 
     def  buildModel(self, batch_size, timesteps, input_dim, in_neurons, hidden_layers, hidden_neurons, out_neurons,
-                   rnn_activation, dense_activation,
-                   nb_epoch, X_train, y_train, X_validation, y_validation, verbose=0):
+                   rnn_activation, dense_activation):
         raise NotImplemented
