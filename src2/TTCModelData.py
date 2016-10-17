@@ -218,6 +218,8 @@ class TTCModelData(object):
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "filepath_or_buffer"]       = bs.filepath_or_buffer
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = int(bs.source_was_buffer)
 
+
+
     def stash_xscaler(self, filename):
         with h5py.File(filename, 'r+') as h5f:
             #dt = h5py.special_dtype(vlen=np.unicode)
@@ -281,6 +283,9 @@ class TTCModelData(object):
                 batch_samples[idx].source_was_buffer        = bool(store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["source_was_buffer"])
 
             return batch_samples
+
+
+
 
     def unstash_xscaler(self, filename):
         with h5py.File(filename, 'r+') as h5f:

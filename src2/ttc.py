@@ -93,7 +93,7 @@ if __name__ == '__main__':
                                dense_activation  = 'linear'
                                )
 
-        mlModel.train(modelData.X_train, modelData.y_train,
+        hist = mlModel.train(modelData.X_train, modelData.y_train,
                       modelData.X_validation, modelData.y_validation,
                       batch_size = modelData.X_train.shape[1],
                       epochs     = 21,
@@ -101,6 +101,7 @@ if __name__ == '__main__':
                       )
         print('Saving trained model to: %s' % arguments['<modelFile.ttc>'], file=sys.stderr)
         mlModel.save_ml_model(modelData, arguments['<modelFile.ttc>'])
+
 
 
     elif arguments['graph'] == True:
