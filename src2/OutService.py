@@ -5,5 +5,5 @@ from abc import ABC, abstractmethod
 class OutService(ABC):
 
     @abstractmethod
-    def printPredictions(self, predictions, ml_model="", sample_file="", *print_args, **print_kwargs):
+    def printPredictions(self, batch_samples, predictions, model_descr, *print_args, **print_kwargs):
         pass

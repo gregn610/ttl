@@ -9,8 +9,9 @@ class DebugBatchSample(BatchSample):
     Bits of useful debug info that don't belong in a regular BatchSample
     """
     def __init__(self, *args, **kwargs):
-        super(DebugBatchSample, self)._init__(*args, **kwargs)
-        self._conversion_from_BatchSample(self)
+        super(DebugBatchSample, self).__init__()
+        if self.filepath_or_buffer is not None: # That a proxy for the BatchSample having loaded a file
+            self._conversion_from_BatchSample()
 
     def _conversion_from_BatchSample(self):
         self.debug_filepath_or_buffer = self.filepath_or_buffer.replace('.log', '.debug')

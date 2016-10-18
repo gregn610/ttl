@@ -2,8 +2,10 @@ import unittest
 import numpy as np
 import pandas as pd
 
+from BatchSample import BatchSample
+from xmlunittest import XmlTestCase
 
-class TestOutServiceXml(unittest.TestCase):
+class TestOutServiceXml(XmlTestCase):
 
     def setUp(self):
         from OutServiceXml import OutServiceXml
@@ -13,19 +15,25 @@ class TestOutServiceXml(unittest.TestCase):
 
     def test_print_predictions(self):
         import io
+        from DebugBatchSample import DebugBatchSample
         from contextlib import redirect_stdout
+        import xml.etree.ElementTree as ET
 
-        predictions = pd.date_range('2011-11-11', periods=7, freq='30min')
-        lleft = """
-<ttc encoding="UTF-8">
-  <predictions ml_model="test_model.ttc" sample_file="test123.log">
-    <p>2011-11-11T00:00:00</p>
-    <p>2011-11-11T00:30:00</p>
-    <p>2011-11-11T01:00:00</p>
-    <p>2011-11-11T01:30:00</p>
-    <p>2011-11-11T02:00:00</p>
-    <p>2011-11-11T02:30:00</p>
-    <p>2011-11-11T03:00:00</p>
+        predictions = [[ pd.date_range('2011-11-11', periods=7, freq='30min') ]]
+
+
+        lleft = """<?xml version='1.0' encoding='utf-8'?>
+<ttc>
+  <predictions ml_model="unit_testing.ttc">
+    <sample file="../../data/population_v2.1/2007-11-11.log">
+      <pr __dbg_realtime_finish="2007-11-11T04:56:56.000000000">2011-11-11 00:00:00</pr>
+      <pr __dbg_realtime_finish="2007-11-11T04:56:56.000000000">2011-11-11 00:30:00</pr>
+      <pr __dbg_realtime_finish="2007-11-11T04:56:56.000000000">2011-11-11 01:00:00</pr>
+      <pr __dbg_realtime_finish="2007-11-11T04:56:56.000000000">2011-11-11 01:30:00</pr>
+      <pr __dbg_realtime_finish="2007-11-11T05:01:42.000000000">2011-11-11 02:00:00</pr>
+      <pr __dbg_realtime_finish="2007-11-11T05:01:42.000000000">2011-11-11 02:30:00</pr>
+      <pr __dbg_realtime_finish="2007-11-11T05:01:42.000000000">2011-11-11 03:00:00</pr>
+    </sample>
   </predictions>
 </ttc>
 
@@ -33,9 +41,20 @@ class TestOutServiceXml(unittest.TestCase):
 
         # thx: http://stackoverflow.com/a/22434594/266387
         with io.StringIO() as buf, redirect_stdout(buf):
-            self.xml_services.printPredictions(predictions, ml_model='test_model.ttc', sample_file='test123.log' )
-            rright = '\n' + buf.getvalue()
 
-        self.assertEqual(lleft, rright)
+            dbs = BatchSample()
+            dbs.process_file('../../data/population_v2.1/2007-11-11.log', 0, 1)
+            dbs.__class__ = DebugBatchSample
+            dbs._conversion_from_BatchSample()
+
+
+            self.xml_services.printPredictions(batch_samples = [dbs, ],
+                                               predictions   = predictions,
+                                               model_descr   = 'unit_testing.ttc')
+            rright_byte_str = buf.getvalue()
+            #rright = ET.fromstring(rright_byte_str)
+
+        self.assertEqual(lleft, rright_byte_str)
+#            root = self.assertXmlDocument(rright_byte_str)
 
 

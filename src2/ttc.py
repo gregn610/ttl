@@ -2,10 +2,10 @@
 """Time Till Complete.
 
 Usage:
-  ttc.py preprocess [--pandas-reader=(csv|excel|json|table)]<modelData.h5> LOGFILES ...
-  ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]]<modelFile.ttc> <modelData.h5>
-  ttc.py predict  [--web [--web-port=<web-port>] [--xml]] [--watch [--interval=<seconds>]]<modelFile.ttc> LOGFILE
-  ttc.py graph [--web [--web-port=<web-port>] [--xml]]<modelFile.ttc> LOGFILE
+  ttc.py preprocess [--pandas-reader=(csv|excel|json|table)]<modeldata.h5> LOGFILES ...
+  ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]]<modelFile.ttc> <modeldata.h5>
+  ttc.py predict  [--xml | --png] [--watch [--interval=<seconds>]]<modelFile.ttc> LOGFILE
+  ttc.py evaluate [--xml | --png] <modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
   ttc.py --version
 
@@ -17,18 +17,17 @@ Options:
   --gpu-ssh-keyfile=<gpu-ssh-keyfile>     ssh key file [default: ~/.ssh/id_rsa.pub ].
   --watch                                 Monitor the log file for writes and make a prediction
   --interval=<seconds>                    If monitoring how frequent to update prediction [default: 15 ]
-  --web                                   Results to an HTTP interface
-  --web-port=<web-port>                   The port to use for the HTTP interface [default: 8080]
-  --xml                                   No HTML interface, just raw XML
+  --xml                                   Output as XML
+  --png                                   Output as graph
   --reset                                 Overwrite any existing learning
   -h --help     Show this screen.
   --version     Show version.
 
 
 Commands:
-  preprocess  Preprocess historic log files into <modelData.h5>
-  train       Read <modelData.h5> and apply the machine learning
-  graph    Assess the accuracy of the model.
+  preprocess  Preprocess historic log files into <modeldata.h5>
+  train       Read <modeldata.h5> and apply the machine learning
+  evaluate    Assess the accuracy of the model.
   predict     Read or monitor a log file and make a prediction or ongoing predictions if in watch mode
 
 """
@@ -46,13 +45,16 @@ if __name__ == '__main__':
     if arguments['--xml']:
         from OutServiceXml import OutServiceXml
         out = OutServiceXml()
+    elif arguments['--png']:
+        from OutServiceGraphics import OutServiceGraphics
+        out = OutServiceGraphics()
     else:
         from OutServicePrint import OutServicePrint
         out = OutServicePrint()
 
 
     if arguments['preprocess'] == True:
-        print('preprocessing log files into %s' % (arguments['<modelData.h5>']), file=sys.stderr)
+        print('preprocessing log files into %s' % (arguments['<modeldata.h5>']), file=sys.stderr)
         from TTCModelData import TTCModelData
 
         modelData = TTCModelData()
@@ -62,7 +64,7 @@ if __name__ == '__main__':
         fnames = list(map( lambda fn: os.path.join(__location__, fn), arguments['LOGFILES'] ))
 
         modelData.load_raw_sample_files( fnames )
-        modelData.save_np_data_file(arguments['<modelData.h5>'] )
+        modelData.save_np_data_file(arguments['<modeldata.h5>'] )
 
 
     elif arguments['train'] == True:
@@ -70,7 +72,7 @@ if __name__ == '__main__':
         from ModelLSTM import ModelLSTM
 
         modelData = TTCModelData()
-        modelData.load_np_data_file(arguments['<modelData.h5>'] )
+        modelData.load_np_data_file(arguments['<modeldata.h5>'] )
 
         mlModel = ModelLSTM()
         if os.path.isfile(arguments['<modelFile.ttc>']):
@@ -104,7 +106,7 @@ if __name__ == '__main__':
 
 
 
-    elif arguments['graph'] == True:
+    elif arguments['evaluate'] == True:
         # ToDo: add another docopt arg to graph predictions or learning rates or SVG(model_to_dot(...))
         from ModelLSTM import ModelLSTM
         from OutServiceGraphics import OutServiceGraphics
@@ -122,8 +124,12 @@ if __name__ == '__main__':
         from ModelLSTM import ModelLSTM
 
         mlModel = ModelLSTM()
-        predictions = mlModel.predict(arguments['<modelFile.ttc>'], arguments['LOGFILE'])[0]
-        out.printPredictions(predictions, ml_model=arguments['<modelFile.ttc>'], sample_file=arguments['LOGFILE'] )
+        mlModel.load_ml_model(arguments['<modelFile.ttc>'])
+
+        batch_samples, predictions = mlModel.predict(arguments['LOGFILE'])
+
+        out.printPredictions(batch_samples, predictions, model_descr=arguments['<modelFile.ttc>'])
+
 
     else:
         print("Arguments:\n%s" % str(arguments), file=sys.stderr)

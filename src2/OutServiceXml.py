@@ -1,25 +1,53 @@
+import sys
 from lxml import etree
+import pandas as pd
 
+from DebugBatchSample import DebugBatchSample
 import OutService
 
 class OutServiceXml(OutService.OutService):
 
-    def printPredictions(self, predictions, ml_model="", sample_file="", *print_args, **print_kwargs ):
+    def printPredictions(self, batch_samples, predictions, model_descr, *print_args, **print_kwargs):
         """
 
-        :param predictions: a list of pandas Timestamps
-        :param print_args: as for normal print()
-        :param print_kwargs: as for normal print()
+        :param batch_samples:
+        :param predictions:
+        :param model_descr:
+        :param print_args:
+        :param print_kwargs:
         :return:
         """
-        root  = etree.Element("ttc", encoding="UTF-8")
-        preds = etree.SubElement(root, "predictions")
-        if ml_model:
-            preds.set("ml_model", ml_model)
-        if sample_file:
-            preds.set("sample_file", sample_file)
+        assert len(predictions) == len(batch_samples)
 
-        for p in predictions:
-            etree.SubElement(preds, "p").text = "%s" % p.isoformat()
+        e_root  = etree.Element("ttc")
+        e_predictions = etree.SubElement(e_root, "predictions")
+        if model_descr:
+            e_predictions.set("ml_model", model_descr)
 
-        print(etree.tostring(root, pretty_print=True, encoding='unicode'), *print_args, **print_kwargs)
+        for idx, prd in enumerate(predictions):
+            e_sample = etree.SubElement(e_predictions, "sample")
+            e_sample.set("file", batch_samples[idx].filepath_or_buffer)
+
+            if isinstance(batch_samples[idx], DebugBatchSample):
+                for idx_p, pred in enumerate(predictions[0][0]):
+                    e_pr = etree.SubElement(e_sample, "pr")
+                    e_pr.text = "%s" % pred.strftime("%Y-%m-%d %H:%M:%S")
+                    e_pr.set("__dbg_realtime_finish", str(batch_samples[idx].debug_dfy['__dbg_realtime_finish'].values[idx_p]))
+            else:
+                for pred in predictions[0]:
+                    e_pr = etree.SubElement(e_sample, "pr")
+                    e_pr.text = "%s" % pred.strftime("%Y-%m-%d %H:%M:%S")
+
+
+        print(etree.tostring(e_root,
+                             pretty_print    = True,
+                             method          = 'xml',
+                             encoding        = 'utf-8',
+                             xml_declaration = True,
+                             ).decode("utf-8") ,
+              *print_args, **print_kwargs)
+
+        #sys.stdout.buffer.write(etree.tostring(e_root,
+        #                         pretty_print=True,
+        #                         xml_declaration=True)
+        #                        )

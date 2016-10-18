@@ -30,7 +30,7 @@ def run_next_prediction(sampleGenerator, modelData, model):
     # and mode.reset() for each new Xpop ???
 
     for sliced in Xpop:
-        p = model.predict(sliced[np.newaxis, :, :])
+        p = model.predict()
         # print('p: %s' % str(p))
         predictions.append(
             debugBatchSample.regularizedToDateTime(debugBatchSample.event_time_col, (p[0, 0]))

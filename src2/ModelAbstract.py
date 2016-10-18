@@ -74,8 +74,9 @@ class ModelAbstract(object):
 
 
 
-    def predict(self, model_file, sample_file, verbose=0, **X_pd_kwargs):
-        self._load_keras_model(model_file)
+    def predict(self, sample_file, verbose=0, **X_pd_kwargs):
+        assert self.model is not None
+
         # this takes a list but, for now, only ever send in 1 sample_file
         X, y = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
 
@@ -86,7 +87,7 @@ class ModelAbstract(object):
             for rpred in raw_predictions:
                 predictions[-1].append(bs.regularizedToDateTime(bs.event_time_col, rpred[0]) )
 
-        return predictions
+        return self.sample_handler.prediction_samples, predictions
 
 
 
