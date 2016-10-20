@@ -61,11 +61,6 @@ class TTCModelData(object):
         for bs in self.prediction_samples:
             bs.pad_feature_columns(self.complete_features)
 
-        X = np.concatenate([self.get_shaped_features_X(bs) for bs in self.prediction_samples])
-        y = np.concatenate([self.get_shaped_y(bs)          for bs in self.prediction_samples])
-
-        return X, y
-
 
     def split_population(self, filelist):
         """
@@ -104,7 +99,7 @@ class TTCModelData(object):
         self.max_timesteps = 0
         for bs in (self.training_samples + self.validation_samples + self.testing_samples):
             self.max_timesteps = max([self.max_timesteps, bs.dfX.shape[0]])
-            for ft in bs.get_dfX_feature_cols():
+            for ft in bs.get_dfI_columns():
                 if ft not in self.complete_features:
                     self.complete_features.append(ft)
 
@@ -131,8 +126,6 @@ class TTCModelData(object):
         self.X_validation, self.y_validation = self.convert_to_numpy(self.validation_samples, "validation reshaped")
         self.X_test,       self.y_test       = self.convert_to_numpy(self.testing_samples,    "testing reshaped")
 
-        X_pop = np.concatenate((self.X_train, self.X_validation))
-
 
     def convert_to_numpy(self, batch_samples, descr=None):
         """
@@ -158,21 +151,11 @@ class TTCModelData(object):
         """
 
         # xscaler is copy=True
-        scaled = self.xscaler.transform(batch_sample.get_dfI_values())
-
-        # If using keras batch normalization ...
-        # scaled = batch_sample.get_dfI_values()
+        x2d = batch_sample.get_dfI_values()
+        scaled = self.xscaler.transform(x2d)
 
         # Fall the 2D wall forward
         npRotated = scaled[np.newaxis, :, :]
-
-        # npPaddedTimeSteps = np.ones((npRotated.shape[0], self.max_timesteps, npRotated.shape[2])) * CONST_EMPTY
-        #
-        # npPaddedTimeSteps[0:npRotated.shape[0],
-        #       0:npRotated.shape[1],
-        #       0:npRotated.shape[2]] = npRotated[:,:,:]
-        #
-        # return npPaddedTimeSteps
 
         # Explode each sample into timestep samples
         npPaddedTimeSteps = np.ones((self.max_timesteps, self.max_timesteps, npRotated.shape[2])) * CONST_EMPTY
@@ -214,9 +197,12 @@ class TTCModelData(object):
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "CONST_COLNAME_PREFIX"]     = bs.CONST_COLNAME_PREFIX
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "event_time_col"]           = bs.event_time_col
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "event_label_col"]          = bs.event_label_col
-                h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "_feature_padding_columns"] = bs._feature_padding_columns
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "filepath_or_buffer"]       = bs.filepath_or_buffer
                 h5f['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs[ "source_was_buffer"]        = int(bs.source_was_buffer)
+                # Groups
+                ascii_features = [n.encode("ascii", "ignore") for n in bs._feature_padding_columns]
+                h5f.create_dataset('batch_samples/%s/bs%05d/feature_padding_columns' % (samples_path, idx), (len(ascii_features),),
+                                   'S%d' % len(max(ascii_features, key=len)), ascii_features)
 
 
 
@@ -278,11 +264,15 @@ class TTCModelData(object):
                 batch_samples[idx].CONST_COLNAME_PREFIX     = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["CONST_COLNAME_PREFIX"]
                 batch_samples[idx].event_time_col           = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["event_time_col"]
                 batch_samples[idx].event_label_col          = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["event_label_col"]
-                batch_samples[idx]._feature_padding_columns = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["_feature_padding_columns"]
                 batch_samples[idx].filepath_or_buffer       = store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["filepath_or_buffer"]
                 batch_samples[idx].source_was_buffer        = bool(store['batch_samples/%s/bs%05d' % (samples_path, idx)].attrs["source_was_buffer"])
+                # Groups
 
-            return batch_samples
+        with h5py.File(filename, 'r+') as h5f:
+            for idx, val in enumerate([_ for _ in h5f.keys() if re.match('batch_samples/%s' % samples_path, _)]):
+                batch_samples[idx]._feature_padding_columns = [n.decode('utf-8') for n in h5f['batch_samples/%s/bs%05d/feature_padding_columns' % (samples_path, idx)][:]]
+
+        return batch_samples
 
 
 

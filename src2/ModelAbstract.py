@@ -12,13 +12,11 @@ class ModelAbstract(object):
 
     def __init__(self):
         self.model = None
-        self.complete_features = None
-        self.max_timesteps     = None
-        self.xscaler_params    = None
         self.training_history  = []  # List of dicts. from keras.callbacks.History objects which each have a history dict
 
     def train(self, X_train, y_train, X_validation, y_validation, batch_size, epochs, verbose=0):
-        assert self.model is not None
+        assert self.model is not None # Either 1) self.buildModel()
+                                      #  or    2) self.load_ml_model() & self.set_sample_handler() have been called.
         th = self.model.fit(
                 X_train,
                 y_train,
@@ -43,10 +41,13 @@ class ModelAbstract(object):
         self._load_keras_model(model_file)
 
 
-    def evaluate(self, model_file, sample_file, verbose=0, **X_pd_kwargs):
-        self._load_keras_model(model_file)
+    def evaluate(self, sample_file, verbose=0, **X_pd_kwargs):
+        assert self.model is not None # Either 1) self.buildModel()
+                                      #  or    2) self.load_ml_model() & self.set_sample_handler() have been called.
+
         # this takes a list but, for now, only ever send in 1 sample_file
-        X, y = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
+        self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
+        X, y = self.sample_handler.convert_to_numpy(self.sample_handler.prediction_samples, 'Predictions')
 
         # Convert to a DebugBatchSample class
         debugBatchSample = self.sample_handler.prediction_samples[0]
@@ -74,20 +75,20 @@ class ModelAbstract(object):
 
 
 
-    def predict(self, sample_file, verbose=0, **X_pd_kwargs):
-        assert self.model is not None
-
-        # this takes a list but, for now, only ever send in 1 sample_file
-        X, y = self.sample_handler.load_prediction_files([sample_file], **X_pd_kwargs)
-
-        raw_predictions = self.model.predict(X, self.sample_handler.max_timesteps, verbose)
+    def predict(self, sample_handler, verbose=0, **X_pd_kwargs):
+        assert self.model is not None # Either 1) self.buildModel()
+                                      #  or    2) self.load_ml_model() have been called.
         predictions = []
-        for idx_bs, bs in enumerate(self.sample_handler.prediction_samples):
-            predictions.append([])
-            for rpred in raw_predictions:
-                predictions[-1].append(bs.regularizedToDateTime(bs.event_time_col, rpred[0]) )
+        Xs, ys = sample_handler.convert_to_numpy(sample_handler.prediction_samples, 'Predictions')
 
-        return self.sample_handler.prediction_samples, predictions
+        for idx, X in enumerate(np.split(Xs, Xs.shape[0] / sample_handler.max_timesteps)):
+            bs = sample_handler.prediction_samples[idx]
+            pcount = bs.dfX.shape[0]
+            # X is _padded to self.max_timesteps but don't want predictions off of padding samples
+            raw_predictions = self.model.predict(X[:pcount,:,:], pcount, verbose)
+            predictions.append([bs.regularizedToDateTime(bs.event_time_col, rpred[0]) for rpred in raw_predictions])
+
+        return predictions
 
 
 

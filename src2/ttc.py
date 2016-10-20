@@ -4,7 +4,7 @@
 Usage:
   ttc.py preprocess [--pandas-reader=(csv|excel|json|table)]<modeldata.h5> LOGFILES ...
   ttc.py train [--reset] [--gpu-ssh-host=<gpu-ssh-host> [--gpu-ssh-port=<gpu-ssh-port>] [--gpu-ssh-keyfile=<gpu-ssh-keyfile>]]<modelFile.ttc> <modeldata.h5>
-  ttc.py predict  [--xml | --png] [--watch [--interval=<seconds>]]<modelFile.ttc> LOGFILE
+  ttc.py predict  [--xml | --png] [--watch [--interval=<seconds>]] <modelFile.ttc> LOGFILES ...
   ttc.py evaluate [--xml | --png] <modelFile.ttc> LOGFILE
   ttc.py (-h | --help)
   ttc.py --version
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         hist = mlModel.train(modelData.X_train, modelData.y_train,
                       modelData.X_validation, modelData.y_validation,
                       batch_size = modelData.X_train.shape[1],
-                      epochs     = 21,
+                      epochs     = 1, # Down to 1 for RAD. Was 21
                       verbose    = 1
                       )
         print('Saving trained model to: %s' % arguments['<modelFile.ttc>'], file=sys.stderr)
@@ -121,14 +121,19 @@ if __name__ == '__main__':
 
     elif arguments['predict'] == True:
         # ToDo: Think about watching open file or stdin like tail -f
+        from TTCModelData import TTCModelData
         from ModelLSTM import ModelLSTM
+
+        sample_handler = TTCModelData()
+        sample_handler.unstash_xscaler(arguments['<modelFile.ttc>'])
+        sample_handler.load_prediction_files(arguments['LOGFILES'])
 
         mlModel = ModelLSTM()
         mlModel.load_ml_model(arguments['<modelFile.ttc>'])
 
-        batch_samples, predictions = mlModel.predict(arguments['LOGFILE'])
+        predictions = mlModel.predict(sample_handler)
 
-        out.printPredictions(batch_samples, predictions, model_descr=arguments['<modelFile.ttc>'])
+        out.printPredictions(sample_handler.prediction_samples, predictions, model_descr=arguments['<modelFile.ttc>'])
 
 
     else:

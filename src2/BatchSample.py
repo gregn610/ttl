@@ -195,6 +195,9 @@ class BatchSample(object):
     def get_dfI_values(self):
         return self._get_dfI(self.dfX).astype(float).values
 
+    def get_dfI_columns(self):
+        return list(self._get_dfI(self.dfX).columns.values)
+
     def get_raw_y(self):
         return self.dfy.values
 

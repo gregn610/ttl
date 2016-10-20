@@ -5,7 +5,7 @@ import os
 
 """
 ToDo: refactor to support
-ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] <modelData.npz> LOGFILES ...
+ttc.py preprocess [--pandas-reader=(csv|excel|json|table)] <sample_handler.npz> LOGFILES ...
 """
 from Consts import CONST_EMPTY
 
@@ -231,7 +231,7 @@ class TestTTCModelData(unittest.TestCase):
                               'y_train',
                               'y_validation'], list(store['numpy'].keys())
                               )
-        #os.unlink(tmpfile.name)
+        #os.unlink(tmp_model_file.name)
 
     def test_load_np_data_file(self):
         import h5py
@@ -249,9 +249,9 @@ class TestTTCModelData(unittest.TestCase):
         testingModelData.load_np_data_file(tmpfile.name)
 
         # Can't do this as the populations contain randomised BatchSamples each load#
-        #self.assertTrue(np.allclose( testingModelData.X_train,      self.modelData.X_train, ), 'X_train[-1,-1,:]: %s and %s' % \
-        #                (str(testingModelData.X_train[-1,1,:]),   str(self.modelData.X_train[-1,-1,:])))
-        #self.assertTrue(np.allclose( testingModelData.y_train,      self.modelData.y_train, ))
+        #self.assertTrue(np.allclose( testingModelData.X_train,      self.sample_handler.X_train, ), 'X_train[-1,-1,:]: %s and %s' % \
+        #                (str(testingModelData.X_train[-1,1,:]),   str(self.sample_handler.X_train[-1,-1,:])))
+        #self.assertTrue(np.allclose( testingModelData.y_train,      self.sample_handler.y_train, ))
         # ...
         
         # Going with min,max&sum of the combined sample populations
@@ -290,7 +290,7 @@ class TestTTCModelData(unittest.TestCase):
 
 
 
-        #os.unlink(tmpfile.name)
+        #os.unlink(tmp_model_file.name)
 
 
 

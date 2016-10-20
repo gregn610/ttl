@@ -29,12 +29,15 @@ class OutServiceXml(OutService.OutService):
             e_sample.set("file", batch_samples[idx].filepath_or_buffer)
 
             if isinstance(batch_samples[idx], DebugBatchSample):
-                for idx_p, pred in enumerate(predictions[0][0]):
+                for idx_p, pred in enumerate(predictions[idx]):
                     e_pr = etree.SubElement(e_sample, "pr")
                     e_pr.text = "%s" % pred.strftime("%Y-%m-%d %H:%M:%S")
-                    e_pr.set("__dbg_realtime_finish", str(batch_samples[idx].debug_dfy['__dbg_realtime_finish'].values[idx_p]))
+                    e_pr.set("__dbg_realtime_finish", str(
+                        batch_samples[idx].debug_dfy['__dbg_realtime_finish'].values[idx_p]
+                        )
+                    )
             else:
-                for pred in predictions[0]:
+                for pred in predictions[idx]:
                     e_pr = etree.SubElement(e_sample, "pr")
                     e_pr.text = "%s" % pred.strftime("%Y-%m-%d %H:%M:%S")
 

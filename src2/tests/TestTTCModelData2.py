@@ -128,7 +128,7 @@ class TestTTCModelData2(unittest.TestCase):
         lleft  = self.modelData.xscaler.transform(bs.get_dfI_values())
         rright = modelData2.xscaler.transform(bs.get_dfI_values())
 
-        # os.unlink(tmpfile.name)
+        # os.unlink(tmp_model_file.name)
 
         self.assertTrue(np.allclose(lleft, rright))
 
@@ -142,7 +142,7 @@ class TestTTCModelData2(unittest.TestCase):
         bs2.process_file(self.SAMPLE_FILES[0], 0, 1)
         bs2.dfX.drop(bs2.dfX.index[-20:], inplace=True)
 
-        # this needs modelData.max_timesteps which is only set after some other files have been _homogenized()
+        # this needs sample_handler.max_timesteps which is only set after some other files have been _homogenized()
         # Thats why it's in here and not the other TestTTCModelData
         y2 = self.modelData.get_shaped_y(bs2)
         lleft  =  np.ones(( 20 )) * CONST_EMPTY
