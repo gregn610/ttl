@@ -86,7 +86,8 @@ class ModelAbstract(object):
             pcount = bs.dfX.shape[0]
             # X is _padded to self.max_timesteps but don't want predictions off of padding samples
             raw_predictions = self.model.predict(X[:pcount,:,:], pcount, verbose)
-            predictions.append([bs.regularizedToDateTime(bs.event_time_col, rpred[0]) for rpred in raw_predictions])
+            reg_predictions = [bs.regularizedToDateTime(bs.event_time_col, rpred[0]) for rpred in raw_predictions]
+            predictions.append(reg_predictions)
 
         return predictions
 

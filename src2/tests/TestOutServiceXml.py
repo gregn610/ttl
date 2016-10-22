@@ -13,13 +13,13 @@ class TestOutServiceXml(XmlTestCase):
         self.xml_services = OutServiceXml()
 
 
-    def test_print_predictions(self):
+    def test_print_predictions_xml(self):
         import io
         from DebugBatchSample import DebugBatchSample
         from contextlib import redirect_stdout
         import xml.etree.ElementTree as ET
 
-        predictions = [[ pd.date_range('2011-11-11', periods=7, freq='30min') ]]
+        predictions = [ pd.date_range('2011-11-11', periods=7, freq='30min').tolist(), ]
 
 
         lleft = """<?xml version='1.0' encoding='utf-8'?>

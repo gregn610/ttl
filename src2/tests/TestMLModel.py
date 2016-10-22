@@ -163,14 +163,21 @@ class TestMLModel(unittest.TestCase):
                 ln = infile.readline()
                 of44.write(ln)
 
-        self.sample_handler.load_prediction_files([tmp_sample_file_22, tmp_sample_file_44])
+        self.sample_handler.load_prediction_files([tmp_sample_file_22.name,
+                                                   tmp_sample_file_44.name]
+                                                  )
         Xs, ys = self.sample_handler.convert_to_numpy(self.sample_handler.prediction_samples, 'Test Predictions')
         predictions = self.mlModel.predict(self.sample_handler)
 
-        self.assertTrue(True)
+        self.assertEqual( 2, len(predictions))
+        self.assertEqual(19, len(predictions[0]))
+        self.assertEqual(41, len(predictions[1]))
 
-        os.unlink(tmp_sample_file_22)
-        os.unlink(tmp_sample_file_44)
+        self.assertTrue(all(type(_) is pd.Timestamp for _ in predictions[0]))
+        self.assertTrue(all(type(_) is pd.Timestamp for _ in predictions[1]))
+
+        os.unlink(tmp_sample_file_22.name)
+        os.unlink(tmp_sample_file_44.name)
 
 
 
